@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Print Card — {{ card.card_number }}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: Arial, sans-serif;
+  background: #e0e0e0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn { padding: 10px 24px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; font-family: Arial; font-weight: 600; text-decoration: none; display: inline-block; }
+.btn-print { background: #C8102E; color: white; }
+.btn-back { background: #333; color: white; }
+
+.cards-wrapper {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* CARD BASE */
+.access-card {
+  width: 85.6mm;
+  background: white;
+  font-family: Arial, sans-serif;
+  position: relative;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+/* ── FRONT ── */
+.card-front { padding: 4mm 4mm 3mm; }
+
+.card-front .hdr { text-align: center; border-bottom: 1.5px solid #000; padding-bottom: 2.5mm; margin-bottom: 2.5mm; }
+.card-front .hdr .plant { font-size: 8.5pt; font-weight: bold; }
+.card-front .hdr .title { font-size: 7.5pt; font-weight: bold; margin-top: 1px; }
+.card-front .hdr .cno { font-size: 6.5pt; color: #444; margin-top: 1.5px; }
+
+.card-front .body { display: flex; gap: 2.5mm; }
+.card-front .info { flex: 1; }
+.card-front .photo-box { width: 19mm; flex-shrink: 0; }
+.card-front .photo-box img { width: 19mm; height: 24mm; object-fit: cover; border: 1px solid #999; display: block; }
+.card-front .no-photo { width: 19mm; height: 24mm; border: 1px solid #999; display: flex; align-items: center; justify-content: center; font-size: 5.5pt; color: #999; text-align: center; }
+
+.row { display: flex; margin-bottom: 2px; line-height: 1.3; }
+.lbl { font-weight: bold; font-size: 6pt; color: #222; min-width: 28mm; flex-shrink: 0; }
+.col { font-size: 5.5pt; margin: 0 1.5px; flex-shrink: 0; }
+.val { font-size: 6.5pt; color: #000; }
+.val.red { color: #C8102E; font-weight: bold; }
+
+.apr-row { display: flex; gap: 2mm; margin-top: 2mm; padding-top: 2mm; border-top: 1px solid #aaa; }
+.apr-block { flex: 1; }
+.apr-lbl { font-size: 5pt; color: #555; }
+.apr-val { font-size: 6pt; font-weight: bold; text-transform: uppercase; }
+
+.footer-strip {
+  display: flex;
+  border-top: 1.5px solid #000;
+  margin-top: 2mm;
+}
+.footer-item {
+  flex: 1;
+  text-align: center;
+  font-size: 5.5pt;
+  font-weight: bold;
+  padding: 2px 1px;
+  border-right: 1px solid #999;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+.footer-item:last-child { border-right: none; }
+
+/* ── BACK ── */
+.card-back { padding: 4mm; }
+
+.card-back .back-hdr {
+  text-align: center;
+  border-bottom: 1.5px solid #000;
+  padding-bottom: 2.5mm;
+  margin-bottom: 3mm;
+}
+.card-back .back-hdr .plant { font-size: 8pt; font-weight: bold; }
+.card-back .back-hdr .title { font-size: 7pt; font-weight: bold; margin-top: 1px; }
+
+.back-body { display: flex; gap: 3mm; }
+.instructions { flex: 1; }
+.safety-title {
+  font-size: 8.5pt;
+  font-weight: bold;
+  color: #C8102E;
+  text-align: center;
+  margin-bottom: 3mm;
+}
+.instr-item { display: flex; gap: 2mm; margin-bottom: 2.5mm; font-size: 6pt; line-height: 1.4; }
+.instr-num { font-weight: bold; flex-shrink: 0; min-width: 8px; }
+
+.qr-section { width: 22mm; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2mm; }
+.qr-section #qrcode { width: 22mm; height: 22mm; }
+.qr-section #qrcode img, .qr-section #qrcode canvas { width: 22mm !important; height: 22mm !important; }
+.qr-label { font-size: 5pt; text-align: center; color: #666; }
+
+.powered-by {
+  margin-top: 3mm;
+  text-align: center;
+  font-size: 5.5pt;
+  color: #888;
+  border-top: 1px solid #ddd;
+  padding-top: 2mm;
+}
+
+/* PRINT */
+@media print {
+  body { background: white; padding: 4mm; gap: 6mm; }
+  .controls { display: none; }
+  .access-card { box-shadow: none; border: 0.5pt solid #ccc; }
+  @page { size: A4; margin: 10mm; }
+}
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <a href="/cards" class="btn btn-back">← Back</a>
+  <button class="btn btn-print" onclick="window.print()">🖨 Print Card</button>
+  <a href="/cards/{{ card.id }}/safety-approval" class="btn" style="background:#1a1a1a;color:#fff;border:1px solid #333;">Safety Approval</a>
+</div>
+
+<div class="cards-wrapper">
+
+  <!-- ══ FRONT ══ -->
+  <div class="access-card">
+    <div class="card-front">
+      <div class="hdr">
+        <div class="plant">Moon Beverages Limited- Dasna</div>
+        <div class="title">Contractor Access Card</div>
+        <div class="cno">Card No. : {{ card.card_number }}</div>
+      </div>
+      <div class="body">
+        <div class="info">
+          <div class="row"><span class="lbl">Name of Worker</span><span class="col">:</span><span class="val">{{ card.first_name }} {{ card.middle_name or '' }} {{ card.last_name }}</span></div>
+          <div class="row"><span class="lbl">Contractor Name</span><span class="col">:</span><span class="val">{{ card.company_name }}</span></div>
+          <div class="row"><span class="lbl">Blood Group</span><span class="col">:</span><span class="val">{{ card.blood_group }}</span></div>
+          <div class="row"><span class="lbl">Emergency Contact No.</span><span class="col">:</span><span class="val">{{ card.emergency_contact }}</span></div>
+          <div class="row"><span class="lbl">Medical Checkup Date</span><span class="col">:</span><span class="val">{{ card.created_at[:10] if card.created_at else '—' }}</span></div>
+          <div class="row"><span class="lbl">Safety Induction Date</span><span class="col">:</span><span class="val">{{ card.reinduction_date or (card.created_at[:10] if card.created_at else '—') }}</span></div>
+          <div class="row"><span class="lbl" style="color:#C8102E;font-weight:bold;">Valid Up To</span><span class="col">:</span><span class="val red">{{ card.induction_valid or '—' }}</span></div>
+          <div class="apr-row">
+            <div class="apr-block"><div class="apr-lbl">Approve By HR</div><div class="apr-val">{{ card.hr_remarks or '—' }}</div></div>
+            <div class="apr-block"><div class="apr-lbl">Safety Approval</div><div class="apr-val">{{ card.safety_approved_by or '—' }}</div></div>
+          </div>
+        </div>
+        <div class="photo-box">
+          {% if photo_b64 %}
+          <img src="data:image/jpeg;base64,{{ photo_b64 }}" alt="Photo"/>
+          {% else %}
+          <div class="no-photo">No Photo</div>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Dynamic footer from induction modules -->
+      <div class="footer-strip">
+        {% if modules %}
+          {% for m in modules %}
+          <div class="footer-item">{{ m }}</div>
+          {% endfor %}
+        {% else %}
+          <div class="footer-item">General Site Induction</div>
+          <div class="footer-item">Access Control</div>
+          <div class="footer-item">PTW</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BACK ══ -->
+  <div class="access-card">
+    <div class="card-back">
+      <div class="back-hdr">
+        <div class="plant">Moon Beverages Limited- Dasna</div>
+        <div class="title">Contractor Access Card — {{ card.card_number }}</div>
+      </div>
+      <div class="back-body">
+        <div class="instructions">
+          <div class="safety-title">Safety Instructions</div>
+          <div class="instr-item"><span class="instr-num">1.</span><span>Smoking &amp; consuming alcohol strictly prohibited.</span></div>
+          <div class="instr-item"><span class="instr-num">2.</span><span>Carrying of match-box, lighter, cigarettes, bidi, gutka is strictly prohibited.</span></div>
+          <div class="instr-item"><span class="instr-num">3.</span><span>If you hear emergency siren leave the job &amp; proceed to assembly point.</span></div>
+          <div class="instr-item"><span class="instr-num">4.</span><span>Person found violating the site safety rules will be removed from the site.</span></div>
+          <div class="instr-item"><span class="instr-num">5.</span><span>Please get the card validated periodically.</span></div>
+          <div class="instr-item"><span class="instr-num">6.</span><span>Site GMP &amp; Hygiene program communicated &amp; acknowledged.</span></div>
+        </div>
+        <div class="qr-section">
+          <div id="qrcode"></div>
+          <div class="qr-label">Scan to verify worker profile</div>
+        </div>
+      </div>
+      <div class="powered-by">Moon Beverages Limited — Safety Department, Dasna</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Generate QR code pointing to worker profile
+const profileUrl = window.location.origin + '/worker/{{ card.card_number }}';
+new QRCode(document.getElementById('qrcode'), {
+  text: profileUrl,
+  width: 88,
+  height: 88,
+  colorDark: '#000000',
+  colorLight: '#ffffff',
+  correctLevel: QRCode.CorrectLevel.M
+});
+</script>
+</body>
+</html>

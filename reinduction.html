@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Re-induction — {{ card.card_number }}{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/cards">Cards</a> <span>/ Re-induction</span></div>
+  <h1>Re-induction</h1>
+  <p>{{ card.card_number }} — {{ card.first_name }} {{ card.middle_name or '' }} {{ card.last_name }}</p>
+</div>
+
+<div style="max-width:500px;">
+  <div class="card">
+    <div class="card-head"><h3>Record Re-induction</h3></div>
+    <div class="card-body">
+
+      <div style="background:rgba(255,214,0,.08);border:1px solid rgba(255,214,0,.2);border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--yellow);">
+        ⚠ Re-induction will reset the Safety Approval status. Card must be re-approved by Safety Incharge after this.
+      </div>
+
+      <form method="POST">
+        <div class="fgroup" style="margin-bottom:16px;">
+          <label>Re-induction Date <span class="req">*</span></label>
+          <input type="date" name="induction_date" value="{{ today }}" required/>
+        </div>
+        <div class="fgroup" style="margin-bottom:20px;">
+          <label>New Valid Till Date <span class="req">*</span></label>
+          <input type="date" name="valid_till" required/>
+          <span style="font-size:11px;color:var(--muted);margin-top:4px;display:block;">Usually 3 months from re-induction date</span>
+        </div>
+        <div class="form-actions">
+          <a href="/cards/{{ card.id }}/safety-approval" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary"
+            onclick="return confirm('Confirm re-induction? Safety approval will be reset.')">
+            ↺ Confirm Re-induction
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

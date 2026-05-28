@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Safety Approval — {{ card.card_number }}{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> / <a href="/cards">Cards</a> <span>/ Safety Approval</span></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Safety Incharge Approval</h1>
+      <p>{{ card.card_number }} — {{ card.first_name }} {{ card.middle_name or '' }} {{ card.last_name }}</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      {% if card.safety_status == 'Approved' %}
+      <span class="badge b-approved" style="font-size:13px;padding:8px 16px;">✓ APPROVED & LOCKED</span>
+      {% endif %}
+      <a href="/cards" class="btn btn-secondary btn-sm">← Back</a>
+    </div>
+  </div>
+</div>
+
+{% if card.safety_status == 'Approved' %}
+<div style="background:rgba(200,16,46,.08);border:1px solid rgba(200,16,46,.25);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13.5px;">
+  🔒 This card has been approved by Safety Incharge and is now <strong>locked</strong>. No further edits are allowed.
+  If a mistake was made, please create a new card.
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start;">
+
+  <!-- LEFT: Card details read-only -->
+  <div>
+    <!-- Worker Summary -->
+    <div class="card">
+      <div class="card-head"><h3>Worker Details</h3></div>
+      <div class="card-body" style="display:flex;gap:20px;align-items:flex-start;">
+        <div style="flex-shrink:0;">
+          {% if photo_b64 %}
+          <img src="data:image/jpeg;base64,{{ photo_b64 }}" style="width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--border);"/>
+          {% else %}
+          <div style="width:90px;height:110px;background:var(--s2);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;">No Photo</div>
+          {% endif %}
+        </div>
+        <div style="flex:1;">
+          <table style="font-size:13.5px;width:100%;">
+            <tr><td style="color:var(--muted);width:45%;padding:5px 0;">Name</td><td><strong>{{ card.first_name }} {{ card.middle_name or '' }} {{ card.last_name }}</strong></td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Card No.</td><td>{{ card.card_number }}</td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Contractor</td><td>{{ card.company_name }}</td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Blood Group</td><td>{{ card.blood_group }}</td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Emergency Contact</td><td>{{ card.emergency_contact }}</td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Date of Birth</td><td>{{ card.dob }}</td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Designation</td><td>{{ card.designation }}</td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Medical Checkup</td><td>{{ card.created_at[:10] if card.created_at else '—' }}</td></tr>
+            <tr><td style="color:var(--muted);padding:5px 0;">Valid Up To</td><td style="color:var(--green);font-weight:600;">{{ card.induction_valid or '—' }}</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="card">
+      <div class="card-head"><h3>Uploaded Documents</h3></div>
+      <div class="card-body" style="padding:0;">
+        {% if docs %}
+        <table>
+          <thead><tr><th>#</th><th>Document</th><th>View</th></tr></thead>
+          <tbody>
+            {% for doc in docs %}
+            <tr>
+              <td style="color:var(--muted);font-size:12px;">{{ loop.index }}</td>
+              <td>{{ doc.doc_name }}</td>
+              <td><a href="/uploads/{{ doc.file_path }}" target="_blank" class="btn btn-sm btn-secondary">📄 Open</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No documents uploaded</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Re-induction history -->
+    {% if card.reinduction_date %}
+    <div class="card">
+      <div class="card-head"><h3>Re-induction Record</h3></div>
+      <div class="card-body">
+        <table style="font-size:13.5px;">
+          <tr><td style="color:var(--muted);width:40%;padding:5px 0;">Re-induction Date</td><td>{{ card.reinduction_date }}</td></tr>
+          <tr><td style="color:var(--muted);padding:5px 0;">Done By</td><td>{{ card.reinduction_by }}</td></tr>
+          <tr><td style="color:var(--muted);padding:5px 0;">New Valid Till</td><td>{{ card.induction_valid }}</td></tr>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: Approval Form -->
+  <div>
+    {% if card.safety_status != 'Approved' %}
+    <div class="card" style="position:sticky;top:80px;">
+      <div class="card-head" style="background:rgba(200,16,46,.08);border-bottom-color:rgba(200,16,46,.2);">
+        <h3 style="color:var(--red);">Safety Incharge Approval</h3>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+
+          <div class="sdiv"><span>Induction Modules</span></div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Select modules completed by this worker</p>
+
+          {% set modules = [
+            "Electrical Safety",
+            "Chemical Safety",
+            "Project Safety",
+            "General Site Induction",
+            "Access Control",
+            "PPE Usage",
+            "PTW"
+          ] %}
+          {% for module in modules %}
+          <label style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);">
+            <input type="checkbox" name="induction_modules" value="{{ module }}"
+              {% if module in existing_modules %}checked{% endif %}
+              style="width:16px;height:16px;accent-color:var(--red);"/>
+            {{ module }}
+          </label>
+          {% endfor %}
+
+          <div class="sdiv" style="margin-top:20px;"><span>Approval Details</span></div>
+
+          <div class="fgroup" style="margin-bottom:12px;">
+            <label>Safety Incharge Name <span class="req">*</span></label>
+            <input type="text" name="safety_name" placeholder="Enter name" required
+              value="{{ session.full_name or '' }}"/>
+          </div>
+
+          <div class="fgroup" style="margin-bottom:16px;">
+            <label>Remarks <span class="req">*</span></label>
+            <input type="text" name="safety_remarks" placeholder="e.g. OK, Approved" required value="OK"/>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;"
+            onclick="return confirm('Approve this card? It will be locked after approval.')">
+            ✓ Approve & Lock Card
+          </button>
+
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <!-- Already approved — show approval info -->
+    <div class="card" style="position:sticky;top:80px;">
+      <div class="card-head"><h3>Approval Record</h3></div>
+      <div class="card-body">
+        <table style="font-size:13.5px;">
+          <tr><td style="color:var(--muted);padding:6px 0;width:50%;">Approved By</td><td><strong>{{ card.safety_approved_by }}</strong></td></tr>
+          <tr><td style="color:var(--muted);padding:6px 0;">Approved At</td><td>{{ card.safety_approved_at }}</td></tr>
+          <tr><td style="color:var(--muted);padding:6px 0;">Remarks</td><td>{{ card.safety_remarks }}</td></tr>
+        </table>
+        {% set modules = [] %}
+        {% if card.induction_modules %}
+          {% set modules = card.induction_modules | fromjson %}
+        {% endif %}
+        {% if modules %}
+        <div class="sdiv"><span>Induction Modules</span></div>
+        {% for m in modules %}
+        <div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13.5px;">✓ {{ m }}</div>
+        {% endfor %}
+        {% endif %}
+        <div style="margin-top:16px;display:flex;gap:8px;">
+          <a href="/cards/{{ card.id }}/print" target="_blank" class="btn btn-primary btn-sm" style="flex:1;justify-content:center;">🖨 Print Card</a>
+          <a href="/cards/{{ card.id }}/reinduction" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;">↺ Re-induction</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

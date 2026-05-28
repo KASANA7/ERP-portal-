@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}Add Supervisor{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> / <a href="/supervisors">Supervisors</a> <span>/ Add</span></div>
+  <h1>{% if draft %}Continue: {{ draft.first_name }} {{ draft.last_name }}{% else %}Register New Supervisor{% endif %}</h1>
+  <p>Fill in all required fields. Use Save Draft to save progress.</p>
+</div>
+
+<div id="draft-msg" style="display:none;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.25);color:var(--green);padding:10px 16px;border-radius:6px;margin-bottom:16px;font-size:13.5px;">✅ Draft saved</div>
+
+<div class="card">
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data" id="sup-form">
+      <input type="hidden" name="step_completed" id="step_completed" value="0"/>
+      <input type="hidden" id="sup-draft-id" value="{{ draft.id if draft else '' }}"/>
+
+      <div class="sdiv"><span>Personal Details</span></div>
+      <div class="fg c3">
+        <div class="fgroup"><label>First Name <span class="req">*</span></label><input type="text" name="first_name" required placeholder="First Name" value="{{ draft.first_name if draft else '' }}"/></div>
+        <div class="fgroup"><label>Middle Name</label><input type="text" name="middle_name" placeholder="Middle Name" value="{{ draft.middle_name if draft else '' }}"/></div>
+        <div class="fgroup"><label>Last Name <span class="req">*</span></label><input type="text" name="last_name" required placeholder="Last Name" value="{{ draft.last_name if draft else '' }}"/></div>
+        <div class="fgroup"><label>Date of Birth <span class="req">*</span></label><input type="date" name="dob" required value="{{ draft.dob if draft else '' }}"/></div>
+        <div class="fgroup"><label>Gender</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gender" value="Male" {% if not draft or draft.gender == 'Male' %}checked{% endif %}/> Male</label>
+            <label><input type="radio" name="gender" value="Female" {% if draft and draft.gender == 'Female' %}checked{% endif %}/> Female</label>
+          </div>
+        </div>
+        <div class="fgroup"><label>Mobile <span class="req">*</span></label><input type="tel" name="mobile" required placeholder="10-digit" value="{{ draft.mobile if draft else '' }}"/></div>
+        <div class="fgroup"><label>Aadhar Number <span class="req">*</span></label><input type="text" name="aadhar" required placeholder="XXXX XXXX XXXX" value="{{ draft.aadhar if draft else '' }}"/></div>
+        <div class="fgroup"><label>Languages Known</label><input type="text" name="languages" placeholder="e.g. Hindi, English" value="{{ draft.languages if draft else '' }}"/></div>
+        <div class="fgroup"><label>Other Qualifications</label><input type="text" name="qualifications" placeholder="Any qualifications" value="{{ draft.qualifications if draft else '' }}"/></div>
+        <div class="fgroup s3"><label>Residential Address <span class="req">*</span></label><textarea name="address" required placeholder="Full address...">{{ draft.address if draft else '' }}</textarea></div>
+      </div>
+
+      <div class="sdiv"><span>Work Details</span></div>
+      <div class="fg c2">
+        <div class="fgroup">
+          <label>Contractor Company <span class="req">*</span></label>
+          <select name="company_id" required>
+            <option value="">Select Company</option>
+            {% for co in companies %}
+            <option value="{{ co.id }}" {% if draft and draft.company_id == co.id %}selected{% endif %}>{{ co.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- TAG WORK TYPE -->
+        <div class="fgroup">
+          <label>Work Type(s) <span class="req">*</span></label>
+          <input type="hidden" name="work_type" id="sup_work_type_val"/>
+          <span class="err" id="e-sup-work-type"></span>
+          <div id="sup-tags-selected" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:10px;"></div>
+          <div style="position:relative;">
+            <input type="text" id="sup-tag-search" placeholder="Search and select work types..." oninput="filterSupTags(this.value)" onclick="showSupDropdown()" autocomplete="off"/>
+            <div id="sup-tag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s2);border:1px solid var(--red);border-radius:0 0 6px 6px;max-height:200px;overflow-y:auto;z-index:100;"></div>
+          </div>
+        </div>
+
+        <div class="fgroup">
+          <label>No. of Workers Under <span class="req">*</span></label>
+          <input type="number" name="num_workers" required placeholder="e.g. 10" min="1" value="{{ draft.num_workers if draft else '' }}"/>
+        </div>
+
+        <!-- COMBINED EXPERIENCE -->
+        <div class="fgroup">
+          <label>Total Experience</label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <input type="number" name="experience_years" placeholder="Years" min="0" value="{{ draft.experience_years if draft else '' }}" style="text-align:center;"/>
+              <span style="font-size:10px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.5px;">Years</span>
+            </div>
+            <div style="font-size:18px;color:var(--muted);padding-top:0px;">+</div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <input type="number" name="experience_months" placeholder="Months" min="0" max="11" value="{{ draft.experience_months if draft else '' }}" style="text-align:center;"/>
+              <span style="font-size:10px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.5px;">Months</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fgroup"><label>Technical Qualification (if applicable)</label><input type="text" name="technical_qualification" placeholder="e.g. Electrical License No." value="{{ draft.technical_qualification if draft else '' }}"/></div>
+        <div class="fgroup s2"><label>Type of Jobs Handled</label><textarea name="jobs_handled" placeholder="Describe type of jobs this supervisor handles...">{{ draft.jobs_handled if draft else '' }}</textarea></div>
+
+        <div class="fgroup s2">
+          <label>Nature of Work / Risk Level <span class="req">*</span></label>
+          <input type="hidden" name="nature_of_work" id="f-sup-nature" value="{{ draft.nature_of_work if draft else '' }}"/>
+          <input type="hidden" name="risk_level" id="f-sup-risk"/>
+          <span class="err" id="e-sup-nature"></span>
+          <div style="display:flex;gap:10px;margin-top:6px;">
+            <div class="nature-opt" data-val="General Work" data-risk="general" onclick="selSupNature(this)"><div style="font-size:22px;">🟢</div><div style="font-weight:600;font-size:13px;margin-top:4px;">General Work</div><div style="font-size:11px;color:var(--muted);">Low risk</div></div>
+            <div class="nature-opt" data-val="High Risk Work" data-risk="high" onclick="selSupNature(this)"><div style="font-size:22px;">🟠</div><div style="font-weight:600;font-size:13px;margin-top:4px;">High Risk Work</div><div style="font-size:11px;color:var(--muted);">Requires permit</div></div>
+            <div class="nature-opt" data-val="Ultra High Risk Work" data-risk="critical" onclick="selSupNature(this)"><div style="font-size:22px;">🔴</div><div style="font-weight:600;font-size:13px;margin-top:4px;">Ultra High Risk</div><div style="font-size:11px;color:var(--muted);">Dedicated supervisor</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTS FIRST -->
+      <div class="sdiv"><span>Documents</span></div>
+      <div class="fg c3">
+        <div class="fgroup"><label>Aadhar Card <span class="req">*</span></label>
+          <div class="upload-zone"><input type="file" name="doc_file[]" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/>
+          <input type="hidden" name="doc_name[]" value="Aadhar Card"/>
+          <div class="upload-icon">🪪</div><p>Upload Aadhar</p><div class="fname"></div></div>
+        </div>
+        <div class="fgroup"><label>Experience Certificate</label>
+          <div class="upload-zone"><input type="file" name="doc_file[]" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/>
+          <input type="hidden" name="doc_name[]" value="Experience Certificate"/>
+          <div class="upload-icon">📜</div><p>Upload Certificate</p><div class="fname"></div></div>
+        </div>
+        <div class="fgroup"><label>Technical License (if any)</label>
+          <div class="upload-zone"><input type="file" name="doc_file[]" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/>
+          <input type="hidden" name="doc_name[]" value="Technical License"/>
+          <div class="upload-icon">📄</div><p>Upload License</p><div class="fname"></div></div>
+        </div>
+      </div>
+      <div id="extra-sup-docs"></div>
+      <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="addExtraDoc('extra-sup-docs')">+ Add More Documents</button>
+
+      <!-- INTERVIEW ASSESSMENT AFTER DOCS -->
+      <div class="sdiv" style="margin-top:24px;"><span>Interview Assessment</span></div>
+      {% set int_questions = [
+        ("Attitude to safety", "int_attitude"),
+        ("Functional knowledge", "int_functional"),
+        ("Communication in local language", "int_communication"),
+        ("Specialised job knowledge (Rigging, Electrical, Hot Work, Height, Confined etc.)", "int_specialised")
+      ] %}
+      {% for q, field in int_questions %}
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+        <div style="flex:1;font-size:13.5px;min-width:200px;">{{ q }}</div>
+        <input type="hidden" name="{{ field }}" id="{{ field }}-val" value=""/>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          {% for opt in ['Very Good', 'Good', 'Average', 'Poor', 'No idea'] %}
+          <button type="button" class="int-btn" data-field="{{ field }}-val" data-val="{{ opt }}" onclick="selIntBtn(this)">{{ opt }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px;padding:12px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13.5px;flex:1;">Valid statutory license for specialized job?</span>
+        <input type="hidden" name="int_license" id="int_license-val" value="NA"/>
+        <div style="display:flex;gap:5px;">
+          {% for opt in ['OK', 'NOT OK', 'NA'] %}
+          <button type="button" class="int-btn" data-field="int_license-val" data-val="{{ opt }}" onclick="selIntBtn(this)">{{ opt }}</button>
+          {% endfor %}
+        </div>
+        <input type="text" name="int_license_remarks" placeholder="Remarks" style="max-width:180px;"/>
+      </div>
+
+      <!-- INTERVIEW RESULT LAST -->
+      <div class="sdiv" style="margin-top:20px;"><span>Interview Result</span></div>
+      <div class="fg c2">
+        <div class="fgroup"><label>Result <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="interview_result" value="Approved" required/> Approved</label>
+            <label><input type="radio" name="interview_result" value="Rejected"/> Rejected</label>
+          </div>
+        </div>
+        <div class="fgroup"><label>Special Remarks</label><input type="text" name="remarks" placeholder="Any remarks..." value="{{ draft.remarks if draft else '' }}"/></div>
+      </div>
+
+      <div class="form-actions">
+        <a href="/supervisors" class="btn btn-secondary">Cancel</a>
+        <button type="button" class="btn btn-secondary" onclick="saveSupDraft()">💾 Save Draft</button>
+        <button type="button" class="btn btn-primary" onclick="submitSupForm()">Submit for Approval →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.nature-opt{flex:1;border:2px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;background:var(--s2);}
+.nature-opt:hover{border-color:var(--muted);}
+.nature-opt.selected{border-color:var(--red);background:rgba(200,16,46,.08);}
+.int-btn{padding:5px 10px;border-radius:4px;border:1px solid var(--border);background:var(--s2);color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.int-btn.selected{background:rgba(200,16,46,.15);border-color:var(--red);color:var(--text);}
+.err{font-size:12px;color:var(--red);}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── SUPERVISOR TAG WORK TYPE ──────────────────────────
+const supWorkTypes = [
+  'Aseptic filling in Laminates','Blending','Boiler firing','Centrifuging','Charging',
+  'CIP work','Civil','Cleaning','Confined Space Entry','Construction Work',
+  'Cutting / Grinding','Dispensing','Distillation','Drying','Drying of uniforms',
+  'Ducting & Insulation work','Dumping activity','Electrical Work','Excavation Work',
+  'Fabrication Work','FG Loading Or Unloading activity','Filling of PET bottles',
+  'Filtration','Food Distribution','Food Preparation','Forklift Driving',
+  'Forklift / vehicle movement','Gas Cutting','Goods inward & outward','Grinding',
+  'Hazardous material handling','Hazardous Waste Storage','Height Work','Hot work',
+  'Housekeeping','Incineration','Inspection of Equipment','Issuing of materials','IT',
+  'Lab testing of finished products','Laboratory Work','Laundry Work',
+  'Loading / Unloading of Tankers','Loading / Unloading of Material / Solvent',
+  'Maintenance','Maintenance Activity','Manual handling','Manual packaging work',
+  'Material Handling','Micro testing','Milling','Office / Documentation Work',
+  'Packaging of FG','Painting','People movement','Plant Inspection','Preform Dumping',
+  'Receipt of materials','Roof top','Sampling',
+  'Scaffolding Erection & Dismantle work activity','Shifting','Solar area roof top',
+  'Solar cleaning','Technical','Transfer of Chemical / Solvents','Truck Parking',
+  'Vigilance','Washing and Cleaning of Floor','Washing of uniforms',
+  'Waste Material Handling','Waste Water Treatment','Weighing & Packing','Welding'
+];
+
+let selSupTypes = [];
+
+function renderSupTags() {
+  const c = document.getElementById('sup-tags-selected');
+  c.innerHTML = selSupTypes.map(t => `
+    <span style="background:rgba(200,16,46,.15);border:1px solid rgba(200,16,46,.3);color:var(--text);padding:4px 10px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;">
+      ${t} <span onclick="removeSupTag('${t.replace(/'/g,"\\'")}') " style="cursor:pointer;color:var(--red);font-weight:bold;">×</span>
+    </span>`).join('');
+  document.getElementById('sup_work_type_val').value = selSupTypes.join(', ');
+}
+
+function removeSupTag(t) {
+  selSupTypes = selSupTypes.filter(x => x !== t);
+  renderSupTags();
+  renderSupDropdown(document.getElementById('sup-tag-search').value);
+}
+
+function addSupTag(t) {
+  if(!selSupTypes.includes(t)) { selSupTypes.push(t); renderSupTags(); }
+  document.getElementById('sup-tag-search').value = '';
+  renderSupDropdown('');
+}
+
+function renderSupDropdown(filter) {
+  const dd = document.getElementById('sup-tag-dropdown');
+  const filtered = supWorkTypes.filter(t =>
+    t.toLowerCase().includes(filter.toLowerCase()) && !selSupTypes.includes(t));
+  if(!filtered.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = filtered.map(t => `
+    <div onclick="addSupTag('${t.replace(/'/g,"\\'")}')"
+      style="padding:8px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='rgba(200,16,46,.1)'"
+      onmouseout="this.style.background=''">
+      ${t}
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+
+function showSupDropdown() { renderSupDropdown(document.getElementById('sup-tag-search').value); }
+function filterSupTags(v) { renderSupDropdown(v); }
+
+document.addEventListener('click', function(e) {
+  if(!e.target.closest('#sup-tag-search') && !e.target.closest('#sup-tag-dropdown'))
+    document.getElementById('sup-tag-dropdown').style.display = 'none';
+});
+
+// ── NATURE OF WORK ────────────────────────────────────
+function selSupNature(el) {
+  document.querySelectorAll('.nature-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('f-sup-nature').value = el.dataset.val;
+  document.getElementById('f-sup-risk').value = el.dataset.risk;
+  document.getElementById('e-sup-nature').textContent = '';
+}
+
+// Pre-select nature if draft
+{% if draft and draft.nature_of_work %}
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nature-opt').forEach(o => {
+    if(o.dataset.val === '{{ draft.nature_of_work }}') {
+      o.classList.add('selected');
+      document.getElementById('f-sup-risk').value = o.dataset.risk;
+    }
+  });
+  {% if draft.work_type %}
+  '{{ draft.work_type }}'.split(', ').forEach(t => { if(t) selSupTypes.push(t); });
+  renderSupTags();
+  {% endif %}
+});
+{% endif %}
+
+// ── INTERVIEW BUTTONS ─────────────────────────────────
+function selIntBtn(btn) {
+  const field = btn.dataset.field;
+  btn.parentElement.querySelectorAll('.int-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById(field).value = btn.dataset.val;
+}
+
+// ── SAVE DRAFT ────────────────────────────────────────
+function saveSupDraft() {
+  const data = {};
+  document.querySelectorAll('#sup-form input, #sup-form select, #sup-form textarea').forEach(el => {
+    if(!el.name || el.type === 'file' || el.name === 'step_completed') return;
+    if(el.type === 'radio' && !el.checked) return;
+    data[el.name] = el.value;
+  });
+  data['work_type'] = selSupTypes.join(', ');
+  const draftId = document.getElementById('sup-draft-id').value || null;
+  fetch('/supervisors/save-draft', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ supervisor_id: draftId ? parseInt(draftId) : null, form_data: data })
+  }).then(r => r.json()).then(d => {
+    if(d.success) {
+      document.getElementById('sup-draft-id').value = d.supervisor_id;
+      const msg = document.getElementById('draft-msg');
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 3000);
+    }
+  });
+}
+
+// ── SUBMIT ────────────────────────────────────────────
+function submitSupForm() {
+  // Basic validation
+  const required = ['first_name','last_name','dob','mobile','aadhar','address'];
+  let ok = true;
+  required.forEach(f => {
+    const el = document.querySelector(`[name="${f}"]`);
+    if(el && !el.value.trim()) { el.style.borderColor = 'var(--red)'; ok = false; }
+    else if(el) el.style.borderColor = '';
+  });
+  if(selSupTypes.length === 0) {
+    document.getElementById('e-sup-work-type').textContent = 'Select at least one work type';
+    ok = false;
+  } else { document.getElementById('e-sup-work-type').textContent = ''; }
+  if(!document.getElementById('f-sup-nature').value) {
+    document.getElementById('e-sup-nature').textContent = 'Select nature of work';
+    ok = false;
+  } else { document.getElementById('e-sup-nature').textContent = ''; }
+  if(!ok) { window.scrollTo({top:0,behavior:'smooth'}); return; }
+  document.getElementById('step_completed').value = '1';
+  document.getElementById('sup-form').submit();
+}
+
+// Prevent Enter submit
+document.getElementById('sup-form').addEventListener('keydown', function(e) {
+  if(e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); return false; }
+});
+</script>
+{% endblock %}

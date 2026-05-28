@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc">Home <span>/ Dashboard</span></div>
+  <h1>Dashboard</h1>
+  <p>Welcome back, <strong>{{ session.full_name or session.username }}</strong> · Moon Beverages Limited, Dasna</p>
+</div>
+
+<!-- STATS -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px;">
+  {% for label, val, sub, color in [
+    ('Companies', stats.companies, stats.companies_pending|string + ' pending', '#C8102E'),
+    ('Supervisors', stats.supervisors, 'Registered', '#2563eb'),
+    ('Active Cards', stats.cards_active, stats.cards_pending|string + ' pending', '#16a34a'),
+    ('Cards Today', stats.cards_today, 'Made today', '#ca8a04'),
+    ('Total Cards', stats.cards_total, 'All time', '#6b7280')
+  ] %}
+  <div class="card" style="margin:0;border-top:3px solid {{ color }};">
+    <div class="card-body" style="padding:16px 18px;">
+      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ label }}</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:{{ color }};line-height:1;">{{ val }}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;">{{ sub }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- CHART + PENDING -->
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px;">
+  <div class="card" style="margin:0;">
+    <div class="card-head"><h3>Cards Made — Last 7 Days</h3></div>
+    <div class="card-body">
+      <div style="display:flex;align-items:flex-end;gap:8px;height:90px;">
+        {% set max_count = namespace(val=1) %}
+        {% for d in chart %}{% if d.count > max_count.val %}{% set max_count.val = d.count %}{% endif %}{% endfor %}
+        {% for d in chart %}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;">
+          <div style="font-size:11px;color:var(--text);font-weight:600;">{{ d.count if d.count > 0 else '' }}</div>
+          <div style="width:100%;background:{% if d.count > 0 %}#C8102E{% else %}#e0e2e7{% endif %};border-radius:4px 4px 0 0;min-height:4px;height:{{ [(d.count / max_count.val) * 65, 4]|max if max_count.val > 0 else 4 }}px;opacity:.85;transition:opacity .2s;" title="{{ d.count }} cards on {{ d.day }}"></div>
+          <div style="font-size:10px;color:var(--muted);">{{ d.day }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin:0;">
+    <div class="card-head">
+      <h3>Pending Approvals</h3>
+      <a href="/cards?status=Pending" class="btn btn-sm btn-primary">View All</a>
+    </div>
+    <div style="padding:0;">
+      {% if pending_approvals %}
+      <table>
+        <thead><tr><th>Name</th><th>Company</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for card in pending_approvals %}
+          <tr>
+            <td><strong>{{ card.first_name }} {{ card.last_name }}</strong></td>
+            <td style="color:var(--muted);font-size:12px;">{{ card.company_name }}</td>
+            <td>
+              <button class="btn btn-sm btn-success" onclick="quickApprove({{ card.id }}, this)">✓ Approve</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="text-align:center;padding:28px;color:var(--muted);font-size:13px;">✅ No pending approvals</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- RECENT CARDS -->
+{% if recent_cards %}
+<div class="card">
+  <div class="card-head">
+    <h3>Recent Cards</h3>
+    <a href="/cards" class="btn btn-sm btn-secondary">View All →</a>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Card No.</th><th>Name</th><th>Company</th><th>Blood Grp</th><th>Valid Till</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for card in recent_cards %}
+        <tr>
+          <td style="color:var(--muted);font-size:11px;">{{ card.card_number }}</td>
+          <td><strong>{{ card.first_name }} {{ card.middle_name or '' }} {{ card.last_name }}</strong></td>
+          <td style="font-size:12px;">{{ card.company_name }}</td>
+          <td style="font-weight:700;color:var(--red);">{{ card.blood_group }}</td>
+          <td style="font-size:12px;color:var(--green);">{{ card.induction_valid or '—' }}</td>
+          <td><span class="badge {% if card.status=='Approved' %}b-approved{% elif card.status=='Rejected' %}b-rejected{% else %}b-pending{% endif %}">{{ card.status }}</span></td>
+          <td>
+            {% if card.status == 'Approved' %}
+            <a href="/cards/{{ card.id }}/print" target="_blank" class="btn btn-sm btn-secondary">🖨 Print</a>
+            {% else %}
+            <a href="/cards/{{ card.id }}/safety-approval" class="btn btn-sm btn-primary" style="font-size:11px;">Review</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function quickApprove(id, btn) {
+  fetch(`/cards/${id}/approve`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({type: 'both'})
+  }).then(r => r.json()).then(d => {
+    if(d.success) {
+      btn.closest('tr').style.opacity = '.3';
+      setTimeout(() => btn.closest('tr').remove(), 400);
+    }
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Companies{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> <span>/ Companies</span></div>
+  <h1>Contractor Companies</h1>
+  <p>Register and manage companies contracted at the plant</p>
+</div>
+<div class="card">
+  <div class="card-head"><h3>Registered Companies ({{ companies|length }})</h3><a href="/companies/add" class="btn btn-primary">+ Add Company</a></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Company Name</th><th>Work Type</th><th>Contact</th><th>Supervisors</th><th>Risk</th><th>Status</th><th>Active</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for co in companies %}
+        <tr id="co-{{ co.id }}">
+          <td>
+            <strong>{{ co.name }}</strong>
+            {% if co.status == 'Draft' %}<span style="font-size:10px;color:var(--muted);margin-left:6px;">DRAFT</span>{% endif %}
+            <br><span style="font-size:11px;color:var(--muted);">{{ (co.address or '')[:40] }}{% if co.address and co.address|length > 40 %}...{% endif %}</span>
+          </td>
+          <td style="font-size:12px;">{{ co.work_type or '—' }}</td>
+          <td style="font-size:12px;">{{ co.contact_person or '—' }}<br>{{ co.contact_number or '' }}</td>
+          <td style="text-align:center;">{{ co.num_supervisors or '—' }}</td>
+          <td>
+            {% if co.risk_level == 'general' or co.nature_of_work == 'General Work' %}<span class="risk-b rb-low">GENERAL</span>
+            {% elif co.risk_level == 'high' or co.nature_of_work == 'High Risk Work' %}<span class="risk-b rb-high">HIGH</span>
+            {% elif co.risk_level == 'critical' or co.nature_of_work == 'Ultra High Risk Work' %}<span class="risk-b rb-crit">ULTRA HIGH</span>
+            {% else %}<span style="color:var(--muted);font-size:12px;">—</span>{% endif %}
+          </td>
+          <td>
+            {% if co.status == 'Draft' %}
+            <span class="badge" style="background:rgba(100,100,100,.15);color:var(--muted);">Draft</span>
+            {% elif co.status == 'Approved' %}
+            <span class="badge b-approved">Approved</span>
+            {% elif co.status == 'Rejected' %}
+            <span class="badge b-rejected">Rejected</span>
+            {% else %}
+            <span class="badge b-pending">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if co.status == 'Approved' %}
+            <button class="btn btn-sm {% if co.is_active %}btn-success{% else %}btn-danger{% endif %}"
+              onclick="toggleActive({{ co.id }}, this)">
+              {% if co.is_active %}● Active{% else %}○ Inactive{% endif %}
+            </button>
+            {% else %}
+            <span style="color:var(--muted);font-size:12px;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:5px;">
+              {% if co.status == 'Draft' %}
+              <a href="/companies/{{ co.id }}/continue" class="btn btn-sm btn-primary">Continue →</a>
+              {% elif co.status == 'Pending' %}
+              <a href="/companies/{{ co.id }}" class="btn btn-sm btn-secondary">View</a>
+              {% else %}
+              <a href="/companies/{{ co.id }}" class="btn btn-sm btn-secondary">View</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">No companies yet. <a href="/companies/add" style="color:var(--red);">Add one →</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function approveCo(id){fetch(`/companies/${id}/approve`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({part:'safety'})}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
+function rejectCo(id){fetch(`/companies/${id}/reject`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({part:'safety'})}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}
+function toggleActive(id, btn) {
+  fetch(`/companies/${id}/toggle-active`, {method:'POST'})
+  .then(r=>r.json()).then(d=>{
+    if(d.success) {
+      if(d.is_active) {
+        btn.textContent = '● Active';
+        btn.className = 'btn btn-sm btn-success';
+      } else {
+        btn.textContent = '○ Inactive';
+        btn.className = 'btn btn-sm btn-danger';
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

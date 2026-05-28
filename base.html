@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CMS{% endblock %} — Moon Beverages</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#C8102E;--dred:#9a0c22;
+  --bg:#f4f5f7;--s1:#ffffff;--s2:#f8f9fa;--s3:#f0f1f3;
+  --border:#e0e2e7;--border2:#d0d3da;
+  --text:#1a1d23;--muted:#6b7280;--muted2:#9ca3af;
+  --green:#16a34a;--yellow:#ca8a04;--orange:#ea580c;--blue:#2563eb;
+  --sidebar:#2d3561;--sidebar-text:#94a3b8;--sidebar-active:#fff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{background:var(--red);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(200,16,46,.3);}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-pill{background:rgba(255,255,255,.2);color:#fff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;padding:4px 12px;letter-spacing:2px;border-radius:4px;}
+.logo-text{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px;}
+.logo-text span{color:rgba(255,255,255,.75);}
+.topbar-right{display:flex;align-items:center;gap:10px;font-size:13px;}
+.topbar-right .plant-name{color:rgba(255,255,255,.75);font-size:12px;}
+.user-chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:20px;font-size:13px;color:#fff;display:flex;align-items:center;gap:6px;}
+.topbar .btn-logout{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 14px;border-radius:5px;font-size:12px;text-decoration:none;transition:background .15s;}
+.topbar .btn-logout:hover{background:rgba(255,255,255,.25);}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--sidebar);border-right:none;padding:16px 0;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.nav-section{padding:0 12px;margin-bottom:4px;}
+.nav-label{font-size:10px;letter-spacing:2px;color:#7b8ec8;text-transform:uppercase;padding:10px 8px 5px;font-family:'Rajdhani',sans-serif;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:6px;cursor:pointer;font-size:13.5px;color:#a8b8d8;transition:all .15s;border:1px solid transparent;margin-bottom:2px;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff;}
+.nav-item.active{background:rgba(200,16,46,.3);color:#fff;border-color:rgba(200,16,46,.5);}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;}
+.nav-divider{height:1px;background:rgba(255,255,255,.08);margin:8px 12px;}
+
+/* MAIN */
+.main{flex:1;padding:24px 28px;overflow-y:auto;background:var(--bg);}
+.ph{margin-bottom:22px;}
+.ph h1{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:var(--text);}
+.ph p{color:var(--muted);font-size:13px;margin-top:3px;}
+.bc{font-size:11px;color:var(--muted2);margin-bottom:6px;}
+.bc a{color:var(--muted);text-decoration:none;}
+.bc a:hover{color:var(--red);}
+.bc span{color:var(--red);}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:8px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--s1);border-radius:8px 8px 0 0;}
+.card-head h3{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.3px;}
+.card-body{padding:18px;}
+
+/* FORMS */
+.fg{display:grid;gap:14px;}
+.fg.c2{grid-template-columns:1fr 1fr;}
+.fg.c3{grid-template-columns:1fr 1fr 1fr;}
+.fg.c4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.fgroup{display:flex;flex-direction:column;gap:5px;}
+.fgroup.s2{grid-column:span 2;}
+.fgroup.s3{grid-column:span 3;}
+.fgroup.s4{grid-column:span 4;}
+label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600;}
+label .req{color:var(--red);}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],input[type=password],select,textarea{
+  background:#fff;border:1px solid var(--border2);border-radius:5px;padding:9px 12px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;
+  transition:border-color .15s, box-shadow .15s;width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(200,16,46,.08);}
+select option{background:#fff;color:var(--text);}
+textarea{resize:vertical;min-height:75px;}
+
+/* SECTION DIVIDER */
+.sdiv{display:flex;align-items:center;gap:10px;margin:20px 0 14px;}
+.sdiv span{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);white-space:nowrap;}
+.sdiv::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border2);border-radius:6px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--s2);position:relative;}
+.upload-zone:hover{border-color:var(--red);background:#fff5f5;}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:22px;margin-bottom:4px;}
+.upload-zone p{font-size:12px;color:var(--muted);}
+.upload-zone .fname{font-size:11px;color:var(--green);margin-top:4px;word-break:break-all;}
+
+/* NATURE OPTION */
+.nature-opt{flex:1;border:2px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;background:var(--s2);}
+.nature-opt:hover{border-color:var(--muted2);background:#fff;}
+.nature-opt.selected{border-color:var(--red);background:#fff5f5;}
+
+/* CHECKLIST */
+.chk-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+.chk-item:last-child{border-bottom:none;}
+.chk-num{font-size:12px;color:var(--muted2);min-width:22px;padding-top:2px;font-weight:600;}
+.chk-q{flex:1;font-size:13.5px;line-height:1.5;color:var(--text);}
+.chk-opts{display:flex;gap:5px;flex-shrink:0;align-items:center;}
+.chk-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:#fff;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .15s;}
+.chk-btn:hover{border-color:var(--muted2);}
+.chk-btn.sel-yes{background:#dcfce7;border-color:#16a34a;color:#16a34a;}
+.chk-btn.sel-no{background:#fee2e2;border-color:var(--red);color:var(--red);}
+.chk-btn.sel-na{background:#f3f4f6;border-color:#9ca3af;color:#6b7280;}
+.chk-remark{width:110px;font-size:12px;padding:4px 8px !important;}
+
+/* BUTTONS */
+.btn{padding:9px 20px;border-radius:5px;border:none;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px;text-decoration:none;}
+.btn-primary{background:var(--red);color:#fff;box-shadow:0 1px 3px rgba(200,16,46,.3);}
+.btn-primary:hover{background:var(--dred);}
+.btn-secondary{background:#fff;color:var(--text);border:1px solid var(--border2);}
+.btn-secondary:hover{background:var(--s2);border-color:var(--muted2);}
+.btn-success{background:#dcfce7;color:var(--green);border:1px solid #86efac;}
+.btn-success:hover{background:#bbf7d0;}
+.btn-danger{background:#fee2e2;color:var(--red);border:1px solid #fca5a5;}
+.btn-danger:hover{background:#fecaca;}
+.btn-sm{padding:5px 13px;font-size:12px;}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:18px;border-top:1px solid var(--border);}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;padding:10px 14px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--border);font-weight:600;background:var(--s2);}
+td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.tbl-wrap{overflow-x:auto;}
+
+/* BADGES */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;}
+.b-pending{background:#fef9c3;color:#854d0e;border:1px solid #fde047;}
+.b-approved{background:#dcfce7;color:#15803d;border:1px solid #86efac;}
+.b-rejected{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;}
+.risk-b{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;}
+.rb-low{background:#dcfce7;color:#16a34a;}
+.rb-med{background:#fef9c3;color:#854d0e;}
+.rb-high{background:#ffedd5;color:#c2410c;}
+.rb-crit{background:#fee2e2;color:#b91c1c;}
+
+/* FLASH */
+.flash{padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:14px;display:flex;align-items:center;gap:10px;}
+.flash-success{background:#dcfce7;border:1px solid #86efac;color:#15803d;}
+.flash-error{background:#fee2e2;border:1px solid #fca5a5;color:#b91c1c;}
+
+/* RADIO */
+.radio-group{display:flex;gap:16px;align-items:center;padding:9px 0;}
+.radio-group label{text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;}
+.radio-group input[type=radio]{width:auto;accent-color:var(--red);}
+
+/* EXTRA DOC ROW */
+.extra-doc-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--s2);border-radius:6px;margin-top:8px;border:1px solid var(--border);}
+.extra-doc-row input[type=text]{flex:1;}
+
+/* STEPS */
+.steps{display:flex;gap:0;margin-bottom:22px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.step{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--s2);font-size:12.5px;color:var(--muted);flex:1;position:relative;border-right:1px solid var(--border);}
+.step:last-child{border-right:none;}
+.step.active{background:#fff5f5;color:var(--red);font-weight:600;}
+.step.done{background:#f0fdf4;color:var(--green);}
+.step-n{width:20px;height:20px;border-radius:50%;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.step.active .step-n{background:var(--red);color:#fff;}
+.step.done .step-n{background:var(--green);color:#fff;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-pill">MBL</div>
+    <div class="logo-text">Contractor <span>Management</span> System</div>
+  </div>
+  <div class="topbar-right">
+    <span class="plant-name">Moon Beverages — Dasna</span>
+    <div class="user-chip">👤 {{ session.full_name or session.username }}</div>
+    <a href="/logout" class="btn-logout">Logout</a>
+  </div>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a href="/" class="nav-item {% if request.path=='/' %}active{% endif %}"><span class="nav-icon">📊</span>Dashboard</a>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <div class="nav-label">Setup</div>
+      <a href="/companies" class="nav-item {% if '/companies' in request.path %}active{% endif %}"><span class="nav-icon">🏢</span>Companies</a>
+      <a href="/supervisors" class="nav-item {% if '/supervisors' in request.path %}active{% endif %}"><span class="nav-icon">👷</span>Supervisors</a>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <div class="nav-label">Cards</div>
+      <a href="/cards/add" class="nav-item {% if request.path=='/cards/add' %}active{% endif %}"><span class="nav-icon">🪪</span>Create Card</a>
+      <a href="/cards" class="nav-item {% if request.path=='/cards' %}active{% endif %}"><span class="nav-icon">📋</span>All Cards</a>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <div class="nav-label">Data</div>
+      <a href="/reports" class="nav-item {% if '/reports' in request.path %}active{% endif %}"><span class="nav-icon">📈</span>Reports</a>
+    </div>
+  </div>
+  <div class="main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          {% if category == 'success' %}✅{% else %}⚠{% endif %} {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+<script>
+function fname(inp){const fn=inp.closest('.upload-zone').querySelector('.fname');if(inp.files[0])fn.textContent=inp.files[0].name;}
+function selRisk(el,inputName){el.closest('.risk-sel').querySelectorAll('.risk-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');document.getElementById(inputName||'risk_level').value=el.dataset.val;}
+function addExtraDoc(containerId){const c=document.getElementById(containerId);const div=document.createElement('div');div.className='extra-doc-row';div.innerHTML=`<input type="text" name="doc_name[]" placeholder="Document name" style="flex:1;"/><div class="upload-zone" style="width:180px;padding:8px;position:relative;"><input type="file" name="doc_file[]" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="fname(this)"/><div style="font-size:18px;">📎</div><p style="font-size:11px;">Browse file</p><div class="fname" style="font-size:10px;color:var(--green);margin-top:3px;"></div></div><button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;c.appendChild(div);}
+function selChk(btn,type){const opts=btn.closest('.chk-opts').querySelectorAll('.chk-btn');opts.forEach(b=>b.className='chk-btn');btn.classList.add('chk-btn','sel-'+type);}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

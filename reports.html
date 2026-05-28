@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> <span>/ Reports</span></div>
+  <h1>Reports</h1>
+  <p>Extract and download contractor data by date, company, work type and more</p>
+</div>
+
+<div class="card">
+  <div class="card-head"><h3>Generate Report</h3></div>
+  <div class="card-body">
+    <div class="fg c3">
+      <div class="fgroup">
+        <label>Report Type</label>
+        <select id="rpt-type">
+          <option value="cards">Worker Cards</option>
+          <option value="companies">Companies</option>
+          <option value="supervisors">Supervisors</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <label>Company</label>
+        <select id="rpt-company">
+          <option value="">All Companies</option>
+          {% for co in companies %}
+          <option value="{{ co.id }}">{{ co.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="fgroup">
+        <label>Status</label>
+        <select id="rpt-status">
+          <option value="">All</option>
+          <option value="Approved">Approved</option>
+          <option value="Pending">Pending</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <label>Date From</label>
+        <input type="date" id="rpt-from"/>
+      </div>
+      <div class="fgroup">
+        <label>Date To</label>
+        <input type="date" id="rpt-to"/>
+      </div>
+      <div class="fgroup">
+        <label>Work Type</label>
+        <select id="rpt-work">
+          <option value="">All Types</option>
+          <option>Civil / Construction</option>
+          <option>Electrical Work</option>
+          <option>Mechanical / Maintenance</option>
+          <option>Security / General</option>
+          <option>Hot Work (Welding / Cutting)</option>
+          <option>Height Work</option>
+          <option>Confined Space Work</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions" style="justify-content:flex-start;border:none;padding-top:8px;margin-top:8px;">
+      <button class="btn btn-secondary" onclick="previewReport()">👁 Preview</button>
+      <button class="btn btn-primary" onclick="exportReport('excel')">📥 Download Excel</button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="preview-card" style="display:none;">
+  <div class="card-head">
+    <h3>Preview</h3>
+    <span id="rpt-count" style="font-size:13px;color:var(--muted);"></span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Card No.</th><th>Name</th><th>Company</th>
+          <th>Blood Grp</th><th>DOB</th><th>Designation</th>
+          <th>Date Made</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="rpt-tbody"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function getParams() {
+  return new URLSearchParams({
+    company: document.getElementById('rpt-company').value,
+    status: document.getElementById('rpt-status').value,
+    date_from: document.getElementById('rpt-from').value,
+    date_to: document.getElementById('rpt-to').value,
+  });
+}
+
+function previewReport() {
+  fetch('/reports/data?' + getParams())
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.getElementById('rpt-tbody');
+      document.getElementById('rpt-count').textContent = `${data.length} records`;
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted);">No records found for these filters</td></tr>';
+      } else {
+        tbody.innerHTML = data.map(c => `
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">${c.card_number || '—'}</td>
+            <td><strong>${c.first_name} ${c.middle_name || ''} ${c.last_name}</strong></td>
+            <td style="font-size:12px;">${c.company_name || '—'}</td>
+            <td>${c.blood_group || '—'}</td>
+            <td style="font-size:12px;">${c.dob || '—'}</td>
+            <td style="font-size:12px;">${c.designation || '—'}</td>
+            <td style="font-size:12px;color:var(--muted);">${(c.created_at || '').slice(0,10)}</td>
+            <td><span class="badge ${c.status==='Approved'?'b-approved':c.status==='Rejected'?'b-rejected':'b-pending'}">${c.status}</span></td>
+          </tr>`).join('');
+      }
+      document.getElementById('preview-card').style.display = 'block';
+      document.getElementById('preview-card').scrollIntoView({behavior:'smooth'});
+    });
+}
+
+function exportReport(type) {
+  const params = getParams();
+  window.location.href = '/reports/export/excel?' + params;
+}
+</script>
+{% endblock %}

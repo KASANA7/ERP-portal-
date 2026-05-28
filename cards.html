@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}All Cards{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> <span>/ Cards</span></div>
+  <h1>Worker Cards</h1>
+  <p>All contractor access cards</p>
+</div>
+
+<!-- FILTERS -->
+<div class="card">
+  <div class="card-head">
+    <h3>Cards ({{ cards|length }})</h3>
+    <a href="/cards/add" class="btn btn-primary btn-sm">+ New Card</a>
+  </div>
+  <div class="card-body" style="padding:14px 18px;">
+    <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="fgroup" style="min-width:200px;">
+        <label>Company</label>
+        <select name="company" onchange="this.form.submit()">
+          <option value="">All Companies</option>
+          {% for co in companies %}
+          <option value="{{ co.id }}" {% if company_filter==co.id|string %}selected{% endif %}>{{ co.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="fgroup" style="min-width:140px;">
+        <label>Status</label>
+        <select name="status" onchange="this.form.submit()">
+          <option value="">All</option>
+          <option value="Approved" {% if status_filter=='Approved' %}selected{% endif %}>Approved</option>
+          <option value="Pending" {% if status_filter=='Pending' %}selected{% endif %}>Pending</option>
+          <option value="Rejected" {% if status_filter=='Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+      <div class="fgroup" style="min-width:160px;">
+        <label>Date Made</label>
+        <input type="date" name="date" value="{{ date_filter }}" onchange="this.form.submit()"/>
+      </div>
+      <a href="/cards" class="btn btn-secondary btn-sm" style="margin-bottom:0;">Clear</a>
+    </form>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Card No.</th>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Blood Grp</th>
+          <th>Valid Till</th>
+          <th>Date Made</th>
+          <th>HR</th>
+          <th>Safety</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for card in cards %}
+        <tr id="row-{{ card.id }}">
+          <td style="color:var(--muted);font-size:11px;">{{ card.card_number }}</td>
+          <td><strong>{{ card.first_name }} {{ card.middle_name or '' }} {{ card.last_name }}</strong></td>
+          <td style="font-size:12px;">{{ card.company_name }}</td>
+          <td style="font-weight:600;color:var(--red);">{{ card.blood_group }}</td>
+          <td style="font-size:12px;{% if card.induction_valid %}color:var(--green);{% endif %}">
+            {{ card.induction_valid or '—' }}
+          </td>
+          <td style="font-size:11px;color:var(--muted);">{{ card.created_at[:10] if card.created_at else '' }}</td>
+          <td>
+            {% if card.hr_status == 'Approved' %}
+            <span class="badge b-approved" style="font-size:10px;">✓ Done</span>
+            {% else %}
+            <button class="btn btn-sm btn-success" style="font-size:11px;padding:3px 8px;" onclick="approveHR({{ card.id }}, 'row-{{ card.id }}')">✓ HR</button>
+            {% endif %}
+          </td>
+          <td>
+            {% if card.safety_status == 'Approved' %}
+            <span class="badge b-approved" style="font-size:10px;">✓ Done</span>
+            {% else %}
+            <a href="/cards/{{ card.id }}/safety-approval" class="btn btn-sm btn-secondary" style="font-size:11px;padding:3px 8px;">Review</a>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {% if card.status=='Approved' %}b-approved{% elif card.status=='Rejected' %}b-rejected{% else %}b-pending{% endif %}">
+              {{ card.status }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              {% if card.status == 'Approved' %}
+              <a href="/cards/{{ card.id }}/print" target="_blank" class="btn btn-sm btn-secondary" title="Print Card">🖨</a>
+              <a href="/cards/{{ card.id }}/reinduction" class="btn btn-sm btn-secondary" title="Re-induction">↺</a>
+              {% elif card.status == 'Pending' %}
+              <a href="/cards/{{ card.id }}/safety-approval" class="btn btn-sm btn-primary" style="font-size:11px;">Approve</a>
+              <button class="btn btn-sm btn-danger" onclick="rejectCard({{ card.id }}, 'row-{{ card.id }}')" style="font-size:11px;">✕</button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted);">
+          No cards found. <a href="/cards/add" style="color:var(--red);">Create one →</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function approveHR(id, rowId) {
+  const remarks = prompt('HR Approver Name / Remarks:', 'OK');
+  if(!remarks) return;
+  fetch(`/cards/${id}/approve`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({type: 'hr', remarks})
+  }).then(r => r.json()).then(d => {
+    if(d.success) location.reload();
+  });
+}
+
+function rejectCard(id, rowId) {
+  if(!confirm('Reject this card?')) return;
+  fetch(`/cards/${id}/reject`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({})
+  }).then(r => r.json()).then(d => {
+    if(d.success) location.reload();
+  });
+}
+</script>
+{% endblock %}

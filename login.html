@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMS — Moon Beverages Limited</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;overflow:hidden;background:#8B0000;}
+
+.poster{
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 30%,#e8192e 0%,#C8102E 40%,#8B0000 80%,#4a0010 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.poster::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 40%,rgba(0,0,0,.55) 100%);
+  pointer-events:none;z-index:0;
+}
+
+.circles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;}
+.circle{position:absolute;border-radius:50%;animation:floatUp 12s infinite ease-in-out;}
+.circle:nth-child(1){width:600px;height:600px;top:-200px;left:-150px;animation-duration:14s;background:rgba(255,255,255,.03);}
+.circle:nth-child(2){width:400px;height:400px;top:30%;right:-120px;animation-duration:18s;animation-delay:-4s;background:rgba(255,80,80,.05);}
+.circle:nth-child(3){width:300px;height:300px;bottom:-100px;left:10%;animation-duration:16s;animation-delay:-8s;background:rgba(255,255,255,.04);}
+.circle:nth-child(4){width:200px;height:200px;top:10%;right:20%;animation-duration:20s;animation-delay:-2s;background:rgba(255,100,100,.04);}
+.circle:nth-child(5){width:500px;height:500px;bottom:-200px;right:-100px;animation-duration:22s;animation-delay:-6s;background:rgba(0,0,0,.06);}
+.circle:nth-child(6){width:150px;height:150px;top:60%;left:5%;animation-duration:15s;animation-delay:-10s;background:rgba(255,255,255,.03);}
+@keyframes floatUp{0%,100%{transform:translateY(0) scale(1);}33%{transform:translateY(-30px) scale(1.02);}66%{transform:translateY(15px) scale(.98);}}
+
+.center-glow{
+  position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,80,80,.18) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;z-index:1;
+  animation:glowPulse 4s ease-in-out infinite;
+}
+@keyframes glowPulse{0%,100%{opacity:.8;transform:translate(-50%,-50%) scale(1);}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08);}}
+
+.content{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+  width:100%;padding:16px;
+}
+
+.headline-top{text-align:center;margin-bottom:6px;}
+.small-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:600;margin-bottom:5px;}
+.big-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,5vw,54px);letter-spacing:6px;color:#fff;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,.3);}
+
+.can-scene{position:relative;display:flex;align-items:center;justify-content:center;}
+.side-texts{position:absolute;top:50%;transform:translateY(-50%);width:clamp(500px,75vw,820px);display:flex;justify-content:space-between;pointer-events:none;}
+.side-left,.side-right{font-family:'Rajdhani',sans-serif;font-size:clamp(9px,1.1vw,13px);letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3);line-height:2.2;}
+.side-left{text-align:right;}.side-right{text-align:left;}
+
+.can-wrapper{position:relative;margin:10px 0;animation:canFloat 5s ease-in-out infinite;}
+@keyframes canFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+.can-shadow{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:110px;height:16px;background:radial-gradient(ellipse,rgba(0,0,0,.5) 0%,transparent 70%);animation:shadowPulse 5s ease-in-out infinite;}
+@keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(1);opacity:.5;}50%{transform:translateX(-50%) scaleX(.8);opacity:.3;}}
+.can-svg{width:clamp(100px,12vw,145px);filter:drop-shadow(0 24px 48px rgba(0,0,0,.5)) drop-shadow(0 8px 16px rgba(0,0,0,.3));transition:transform .3s ease;}
+.can-svg:hover{transform:scale(1.04) rotate(-2deg);}
+
+.brand-badge{display:flex;align-items:center;gap:12px;margin:8px 0 3px;}
+.brand-line{width:40px;height:1px;background:rgba(255,255,255,.25);}
+.brand-text{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:6px;color:rgba(255,255,255,.7);}
+.sub-brand{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px;}
+
+.login-glass{width:100%;max-width:320px;}
+.welcome-line{text-align:center;margin-bottom:14px;}
+.welcome-greeting{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px;}
+.welcome-name{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:rgba(255,255,255,.9);transition:all .3s ease;}
+
+.input-wrap{position:relative;margin-bottom:10px;}
+.input-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.45;pointer-events:none;}
+.glass-input{
+  width:100%;padding:12px 14px 12px 38px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;color:#fff;font-size:14px;
+  font-family:'DM Sans',sans-serif;outline:none;
+  backdrop-filter:blur(10px);transition:all .3s ease;
+}
+.glass-input::placeholder{color:rgba(255,255,255,.28);}
+.glass-input:focus{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(255,255,255,.06),0 0 20px rgba(255,100,100,.2);}
+
+.btn-login{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(235,235,235,.9) 100%);
+  border:none;border-radius:8px;color:#C8102E;
+  font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+  transition:all .3s ease;
+  box-shadow:0 4px 20px rgba(0,0,0,.25),0 0 30px rgba(255,255,255,.08);
+  margin-top:4px;
+}
+.btn-login:hover{background:#fff;transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.35),0 0 40px rgba(255,255,255,.12);}
+.btn-login:active{transform:translateY(0);}
+
+.error-glass{background:rgba(255,50,50,.15);border:1px solid rgba(255,100,100,.3);border-radius:7px;padding:9px 13px;color:rgba(255,200,200,.9);font-size:12px;text-align:center;margin-bottom:10px;backdrop-filter:blur(10px);}
+
+.poster-footer{position:fixed;bottom:16px;left:0;right:0;text-align:center;z-index:10;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.18);text-transform:uppercase;}
+
+@media(max-height:680px){.can-svg{width:90px;}.big-title{font-size:28px;}.can-wrapper{margin:4px 0;}.sub-brand{margin-bottom:10px;}}
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="circles">
+    <div class="circle"></div><div class="circle"></div><div class="circle"></div>
+    <div class="circle"></div><div class="circle"></div><div class="circle"></div>
+  </div>
+  <div class="center-glow"></div>
+  <div class="content">
+
+    <div class="headline-top">
+      <div class="small-label">Moon Beverages Limited &middot; Dasna</div>
+      <div class="big-title">CONTRACTOR MANAGEMENT</div>
+    </div>
+
+    <div class="can-scene">
+      <div class="side-texts">
+        <div class="side-left">Safety<br>Compliance<br>Records</div>
+        <div class="side-right">Digital<br>Access<br>Control</div>
+      </div>
+      <div class="can-wrapper">
+        <svg class="can-svg" viewBox="0 0 120 210" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="body" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#6b0015"/>
+              <stop offset="15%" stop-color="#9a0c22"/>
+              <stop offset="40%" stop-color="#e8192e"/>
+              <stop offset="60%" stop-color="#ff3346"/>
+              <stop offset="80%" stop-color="#c8102e"/>
+              <stop offset="100%" stop-color="#6b0015"/>
+            </linearGradient>
+            <linearGradient id="topCap" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#e0e0e0"/>
+              <stop offset="100%" stop-color="#909090"/>
+            </linearGradient>
+            <linearGradient id="botCap" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#aaa"/><stop offset="100%" stop-color="#666"/>
+            </linearGradient>
+            <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+              <stop offset="35%" stop-color="rgba(255,255,255,.22)"/>
+              <stop offset="50%" stop-color="rgba(255,255,255,.06)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </linearGradient>
+            <radialGradient id="dropGlow" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="rgba(255,150,150,.12)"/>
+              <stop offset="100%" stop-color="rgba(255,50,50,0)"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="60" cy="192" rx="40" ry="9" fill="url(#botCap)"/>
+          <rect x="20" y="22" width="80" height="170" fill="url(#body)"/>
+          <rect x="20" y="22" width="80" height="170" fill="url(#dropGlow)" opacity=".6"/>
+          <rect x="20" y="22" width="80" height="170" fill="url(#shine)"/>
+          <rect x="20" y="95" width="80" height="28" fill="rgba(255,255,255,.06)"/>
+          <text x="60" y="76" text-anchor="middle" font-family="Georgia,Times,serif" font-size="17" font-style="italic" font-weight="bold" fill="white" opacity=".95" letter-spacing=".5">Coca-Cola</text>
+          <text x="60" y="113" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" font-weight="bold" fill="rgba(255,255,255,.7)" letter-spacing="2.5">MOON BEVERAGES</text>
+          <text x="60" y="123" text-anchor="middle" font-family="Arial,sans-serif" font-size="5.5" fill="rgba(255,255,255,.45)" letter-spacing="1.5">FRANCHISE PARTNER</text>
+          <text x="60" y="166" text-anchor="middle" font-family="Arial,sans-serif" font-size="6.5" fill="rgba(255,255,255,.3)" letter-spacing=".5">330 mL</text>
+          <ellipse cx="60" cy="22" rx="40" ry="9" fill="url(#topCap)" opacity=".85"/>
+          <ellipse cx="60" cy="17" rx="16" ry="5" fill="#b8b8b8" stroke="#999" stroke-width=".5"/>
+          <ellipse cx="65" cy="14" rx="7" ry="3" fill="#aaa" stroke="#888" stroke-width=".4"/>
+          <rect x="57" y="11" width="12" height="6" rx="2.5" fill="#c0c0c0" stroke="#aaa" stroke-width=".3"/>
+          <ellipse cx="32" cy="55" rx="2" ry="3.5" fill="rgba(255,255,255,.22)" transform="rotate(-10,32,55)"/>
+          <ellipse cx="90" cy="75" rx="1.5" ry="2.5" fill="rgba(255,255,255,.18)" transform="rotate(8,90,75)"/>
+          <ellipse cx="26" cy="105" rx="1.5" ry="2.5" fill="rgba(255,255,255,.2)"/>
+          <ellipse cx="94" cy="130" rx="2" ry="3" fill="rgba(255,255,255,.15)" transform="rotate(-5,94,130)"/>
+          <ellipse cx="35" cy="150" rx="1" ry="2" fill="rgba(255,255,255,.18)"/>
+          <ellipse cx="88" cy="160" rx="1.5" ry="2" fill="rgba(255,255,255,.12)"/>
+          <line x1="32" y1="58" x2="30" y2="68" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+          <line x1="90" y1="78" x2="89" y2="86" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+        </svg>
+        <div class="can-shadow"></div>
+      </div>
+    </div>
+
+    <div class="brand-badge">
+      <div class="brand-line"></div>
+      <div class="brand-text">MBL &middot; CMS</div>
+      <div class="brand-line"></div>
+    </div>
+    <div class="sub-brand">Contractor Management System</div>
+
+    <div class="login-glass">
+      <div class="welcome-line">
+        <div class="welcome-greeting">Welcome back</div>
+        <div class="welcome-name" id="welcome-name">Good morning &#x1F44B;</div>
+      </div>
+      <form method="POST" action="/login">
+        <div class="input-wrap">
+          <span class="input-icon">&#x1F464;</span>
+          <input class="glass-input" type="text" name="username"
+            placeholder="Username" required autofocus autocomplete="username"
+            oninput="updateWelcome(this.value)"/>
+        </div>
+        <div class="input-wrap">
+          <span class="input-icon">&#x1F512;</span>
+          <input class="glass-input" type="password" name="password"
+            placeholder="Password" required autocomplete="current-password"/>
+        </div>
+        <button type="submit" class="btn-login">Sign In &#x2192;</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<div class="poster-footer">
+  Moon Beverages Limited &middot; Dasna &middot; Safety Department &middot; v1.0
+</div>
+
+<script>
+const hour = new Date().getHours();
+const greeting = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+document.getElementById('welcome-name').textContent = 'Good ' + greeting + ' \uD83D\uDC4B';
+function updateWelcome(val) {
+  const el = document.getElementById('welcome-name');
+  if(val.trim()) {
+    const name = val.charAt(0).toUpperCase() + val.slice(1);
+    el.textContent = 'Good ' + greeting + ', ' + name + ' \uD83D\uDC4B';
+  } else {
+    el.textContent = 'Good ' + greeting + ' \uD83D\uDC4B';
+  }
+}
+</script>
+</body>
+</html>

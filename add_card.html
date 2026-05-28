@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% block title %}Create Card{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> / <a href="/cards">Cards</a> <span>/ Create</span></div>
+  <h1>Create Worker Card</h1>
+  <p>Fill in worker details from their 4 documents</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;">
+
+  <!-- LEFT: FORM -->
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data" id="card-form">
+        <input type="hidden" name="photo_data" id="photo_data"/>
+
+        <div class="fg c2">
+          <div class="fgroup">
+            <label>Contractor Company <span class="req">*</span></label>
+            <select name="company_id" required onchange="loadSupervisors(this.value)">
+              <option value="">Select Company</option>
+              {% for co in companies %}
+              <option value="{{ co.id }}">{{ co.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="fgroup">
+            <label>Blood Group <span class="req">*</span></label>
+            <select name="blood_group" required>
+              <option value="">--Select--</option>
+              <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+            </select>
+          </div>
+          <div class="fgroup">
+            <label>Emergency Contact No. <span class="req">*</span></label>
+            <input type="tel" name="emergency_contact" placeholder="10-digit number" required/>
+          </div>
+          <div class="fgroup">
+            <label>Designation <span class="req">*</span></label>
+            <select name="designation" required>
+              <option value="">Select</option>
+              <option>Helper</option><option>Technician</option><option>Operator</option>
+              <option>Loader</option><option>Packer</option><option>Cleaner</option>
+              <option>Driver</option><option>Supervisor</option><option>Others</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sdiv"><span>Worker Type</span></div>
+        <div class="radio-group">
+          <label><input type="radio" name="worker_type" value="workman" checked onclick="showWorkman()"/> Workman</label>
+          <label><input type="radio" name="worker_type" value="supervisor" onclick="showSupervisor()"/> Supervisor</label>
+        </div>
+
+        <div id="workman-section">
+          <div class="sdiv"><span>Worker Name (from Aadhar)</span></div>
+          <div class="fg c3">
+            <div class="fgroup"><label>First Name <span class="req">*</span></label><input type="text" name="first_name" placeholder="First Name"/></div>
+            <div class="fgroup"><label>Middle Name</label><input type="text" name="middle_name" placeholder="Middle Name"/></div>
+            <div class="fgroup"><label>Last Name <span class="req">*</span></label><input type="text" name="last_name" placeholder="Last Name"/></div>
+          </div>
+          <div class="fg c2" style="margin-top:14px;">
+            <div class="fgroup"><label>Date of Birth <span class="req">*</span></label><input type="date" name="dob"/></div>
+            <div class="fgroup"><label>Aadhar Number</label><input type="text" name="aadhar" placeholder="XXXX XXXX XXXX"/></div>
+          </div>
+        </div>
+
+        <div id="supervisor-section" style="display:none;">
+          <div class="sdiv"><span>Select Supervisor</span></div>
+          <div class="fgroup">
+            <label>Supervisor <span class="req">*</span></label>
+            <select name="supervisor_id" id="sup-select">
+              <option value="">-- Select company first --</option>
+              {% for sup in supervisors %}
+              <option value="{{ sup.id }}" data-company="{{ sup.company_id }}">{{ sup.first_name }} {{ sup.last_name }} ({{ sup.company_name }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="sdiv"><span>Documents Upload</span></div>
+        <div class="fg c4">
+          <div class="fgroup">
+            <label>Medical Certificate <span class="req">*</span></label>
+            <div class="upload-zone"><input type="file" name="doc_medical" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/>
+            <div class="upload-icon">🏥</div><p>Pre-Employment Medical</p><div class="fname"></div></div>
+          </div>
+          <div class="fgroup">
+            <label>Aadhar Card <span class="req">*</span></label>
+            <div class="upload-zone"><input type="file" name="doc_aadhar" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/>
+            <div class="upload-icon">🪪</div><p>Aadhar Card</p><div class="fname"></div></div>
+          </div>
+          <div class="fgroup">
+            <label>Blood Report <span class="req">*</span></label>
+            <div class="upload-zone"><input type="file" name="doc_blood" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/>
+            <div class="upload-icon">🩸</div><p>Blood Group Report</p><div class="fname"></div></div>
+          </div>
+          <div class="fgroup">
+            <label>ESIC Card <span class="req">*</span></label>
+            <div class="upload-zone"><input type="file" name="doc_esic" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/>
+            <div class="upload-icon">📋</div><p>Insurance / ESIC</p><div class="fname"></div></div>
+          </div>
+        </div>
+        <div id="extra-docs"></div>
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="addExtraDoc('extra-docs')">+ Add More Documents</button>
+
+        <div class="form-actions">
+          <a href="/cards" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary">Create Card →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RIGHT: CAMERA -->
+  <div>
+    <div class="card" style="position:sticky;top:80px;">
+      <div class="card-head"><h3>📷 Worker Photo</h3></div>
+      <div class="card-body" style="padding:14px;">
+
+        <!-- Camera View -->
+        <div id="camera-section">
+          <div style="position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:3/4;margin-bottom:10px;">
+            <video id="camera-feed" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none;"></video>
+            <div id="camera-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#666;">
+              <div style="font-size:40px;">📷</div>
+              <div style="font-size:13px;">Camera not started</div>
+            </div>
+            <canvas id="camera-canvas" style="display:none;"></canvas>
+          </div>
+
+          <!-- Captured photo preview -->
+          <div id="photo-preview" style="display:none;margin-bottom:10px;">
+            <img id="captured-img" style="width:100%;border-radius:8px;aspect-ratio:3/4;object-fit:cover;"/>
+          </div>
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" id="start-btn" onclick="startCamera()" style="flex:1;">📷 Start Camera</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="switch-btn" onclick="switchCamera()" style="display:none;">🔄 Switch</button>
+            <button type="button" class="btn btn-success btn-sm" id="capture-btn" onclick="capturePhoto()" style="display:none;flex:1;">✓ Capture</button>
+            <button type="button" class="btn btn-danger btn-sm" id="retake-btn" onclick="retakePhoto()" style="display:none;flex:1;">↺ Retake</button>
+          </div>
+
+          <div id="photo-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;"></div>
+        </div>
+
+        <!-- Upload alternative -->
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;">— or upload photo —</div>
+          <div class="upload-zone" style="padding:12px;">
+            <input type="file" accept="image/*" onchange="useUploadedPhoto(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"/>
+            <div style="font-size:13px;color:var(--muted);">📁 Upload from device</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let stream = null;
+let facingMode = 'user'; // front camera default
+
+function showWorkman(){
+  document.getElementById('workman-section').style.display='block';
+  document.getElementById('supervisor-section').style.display='none';
+}
+function showSupervisor(){
+  document.getElementById('workman-section').style.display='none';
+  document.getElementById('supervisor-section').style.display='block';
+}
+
+function loadSupervisors(companyId){
+  const sel=document.getElementById('sup-select');
+  fetch(`/api/supervisors/${companyId}`).then(r=>r.json()).then(data=>{
+    sel.innerHTML='<option value="">-- Select Supervisor --</option>';
+    data.forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`);
+  });
+}
+
+// ── CAMERA ────────────────────────────────────────────
+async function startCamera() {
+  try {
+    if(stream) { stream.getTracks().forEach(t => t.stop()); }
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facingMode, width: {ideal: 640}, height: {ideal: 853} }
+    });
+    const video = document.getElementById('camera-feed');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('camera-placeholder').style.display = 'none';
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('switch-btn').style.display = 'inline-flex';
+    document.getElementById('capture-btn').style.display = 'inline-flex';
+    document.getElementById('photo-status').textContent = 'Camera ready — position worker and capture';
+  } catch(err) {
+    document.getElementById('photo-status').textContent = '⚠ Camera not available — please upload a photo instead';
+    console.error('Camera error:', err);
+  }
+}
+
+function switchCamera() {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  startCamera();
+}
+
+function capturePhoto() {
+  const video = document.getElementById('camera-feed');
+  const canvas = document.getElementById('camera-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+  // Store in hidden field
+  document.getElementById('photo_data').value = dataUrl;
+
+  // Show preview
+  document.getElementById('captured-img').src = dataUrl;
+  document.getElementById('photo-preview').style.display = 'block';
+  document.getElementById('camera-feed').style.display = 'none';
+  document.getElementById('capture-btn').style.display = 'none';
+  document.getElementById('switch-btn').style.display = 'none';
+  document.getElementById('retake-btn').style.display = 'inline-flex';
+  document.getElementById('photo-status').textContent = '✅ Photo captured successfully';
+
+  // Stop camera
+  if(stream) stream.getTracks().forEach(t => t.stop());
+}
+
+function retakePhoto() {
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo_data').value = '';
+  document.getElementById('retake-btn').style.display = 'none';
+  document.getElementById('start-btn').style.display = 'inline-flex';
+  document.getElementById('camera-placeholder').style.display = 'flex';
+  document.getElementById('photo-status').textContent = '';
+  startCamera();
+}
+
+function useUploadedPhoto(input) {
+  if(!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('photo_data').value = e.target.result;
+    document.getElementById('captured-img').src = e.target.result;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('camera-feed').style.display = 'none';
+    document.getElementById('camera-placeholder').style.display = 'none';
+    document.getElementById('capture-btn').style.display = 'none';
+    document.getElementById('switch-btn').style.display = 'none';
+    document.getElementById('retake-btn').style.display = 'inline-flex';
+    document.getElementById('photo-status').textContent = '✅ Photo uploaded successfully';
+    if(stream) stream.getTracks().forEach(t => t.stop());
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// Prevent Enter submit
+document.getElementById('card-form').addEventListener('keydown', function(e){
+  if(e.key==='Enter' && e.target.tagName!=='TEXTAREA'){ e.preventDefault(); return false; }
+});
+</script>
+{% endblock %}

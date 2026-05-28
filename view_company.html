@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% block title %}{{ company.name }}{% endblock %}
+{% block content %}
+
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> / <a href="/companies">Companies</a> <span>/ {{ company.name }}</span></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>{{ company.name }}</h1>
+      <p>Registered {{ company.created_at[:10] if company.created_at else '' }} &nbsp;·&nbsp; {{ company.work_type or '—' }}</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      {% if expiry_status == 'expired' %}
+      <div style="background:rgba(200,16,46,.12);border:1px solid rgba(200,16,46,.3);color:var(--red);padding:6px 14px;border-radius:5px;font-size:12px;font-weight:600;">⚠ CONTRACT EXPIRED</div>
+      {% elif expiry_status == 'warning' %}
+      <div style="background:rgba(255,214,0,.12);border:1px solid rgba(255,214,0,.3);color:var(--yellow);padding:6px 14px;border-radius:5px;font-size:12px;font-weight:600;">⚠ EXPIRES IN {{ days_left }} DAYS</div>
+      {% endif %}
+      <span class="badge {% if company.status=='Approved' %}b-approved{% elif company.status=='Rejected' %}b-rejected{% else %}b-pending{% endif %}" style="font-size:12px;padding:6px 14px;">{{ company.status }}</span>
+      <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨 Print</button>
+      <a href="/companies" class="btn btn-secondary btn-sm">← Back</a>
+    </div>
+  </div>
+</div>
+
+<!-- CONTRACT SUMMARY BANNER -->
+<div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:20px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
+  <div>
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Unit</div>
+    <div style="font-weight:600;">Moon Beverages Limited</div>
+    <div style="font-size:12px;color:var(--muted);">Dasna</div>
+  </div>
+  <div>
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Contract Start</div>
+    <div style="font-weight:600;">{{ company.contract_start or '—' }}</div>
+  </div>
+  <div>
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Contract Expiry</div>
+    <div style="font-weight:600;color:{% if expiry_status=='expired' %}var(--red){% elif expiry_status=='warning' %}var(--yellow){% else %}var(--text){% endif %};">
+      {{ company.contract_expiry or '—' }}
+    </div>
+  </div>
+  <div>
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Avg. Workers</div>
+    <div style="font-weight:600;">{{ company.num_workers or '—' }}</div>
+  </div>
+  <div>
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">No. of Supervisors</div>
+    <div style="font-weight:600;">{{ company.num_supervisors or '—' }}</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+
+  <!-- Company Details -->
+  <div class="card" style="margin:0;">
+    <div class="card-head"><h3>Company Details</h3></div>
+    <div class="card-body">
+      <table style="font-size:13.5px;">
+        <tr><td style="color:var(--muted);width:45%;padding:7px 0;">Contact Person</td><td style="font-weight:500;">{{ company.contact_person or '—' }}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">Contact Number</td><td>{{ company.contact_number or '—' }}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">Email</td><td>{{ company.email or '—' }}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">GST</td><td>{{ company.gst or '—' }}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">ESIC / PF Code</td><td>{{ company.esic_pf_code or '—' }}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">Work Type</td><td>{{ company.work_type or '—' }}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">Nature of Work</td><td>{{ company.nature_of_work or '—' }}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">Risk Level</td><td>
+          {% if company.risk_level == 'low' %}<span class="risk-b rb-low">LOW</span>
+          {% elif company.risk_level == 'medium' %}<span class="risk-b rb-med">MEDIUM</span>
+          {% elif company.risk_level == 'high' %}<span class="risk-b rb-high">HIGH</span>
+          {% elif company.risk_level == 'critical' %}<span class="risk-b rb-crit">CRITICAL</span>
+          {% else %}—{% endif %}
+        </td></tr>
+        <tr><td style="color:var(--muted);padding:7px 0;">Address</td><td style="font-size:12px;">{{ company.address or '—' }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stats + Approval Trail -->
+  <div style="display:flex;flex-direction:column;gap:18px;">
+    <div class="card" style="margin:0;">
+      <div class="card-head"><h3>Activity</h3></div>
+      <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;">
+        <div style="text-align:center;padding:14px;background:var(--s2);border-radius:6px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--green);">{{ supervisors|length }}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Supervisors</div>
+        </div>
+        <div style="text-align:center;padding:14px;background:var(--s2);border-radius:6px;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--blue);">{{ cards_count }}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Cards Made</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval Trail -->
+    <div class="card" style="margin:0;">
+      <div class="card-head"><h3>Approval Trail</h3></div>
+      <div class="card-body" style="padding:0;">
+        <!-- HR Approval -->
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:600;color:#2979ff;letter-spacing:.5px;">PART A — HR APPROVAL</div>
+            <span class="badge {% if company.hr_status=='Approved' %}b-approved{% elif company.hr_status=='Rejected' %}b-rejected{% else %}b-pending{% endif %}">{{ company.hr_status or 'Pending' }}</span>
+          </div>
+          {% if company.hr_approved_by %}
+          <div style="font-size:12px;color:var(--muted);">By: <strong style="color:var(--text);">{{ company.hr_approved_by }}</strong> &nbsp;·&nbsp; {{ company.hr_approved_at[:16] if company.hr_approved_at else '' }}</div>
+          {% if company.hr_remarks %}<div style="font-size:12px;color:var(--muted);margin-top:3px;">Remarks: {{ company.hr_remarks }}</div>{% endif %}
+          {% else %}
+          <div style="font-size:12px;color:var(--muted);">Awaiting HR approval</div>
+          {% endif %}
+          {% if company.hr_status == 'Pending' %}
+          <div style="display:flex;gap:6px;margin-top:10px;">
+            <input type="text" id="hr-remark" placeholder="Add remark (optional)" style="font-size:12px;padding:6px 10px;max-width:200px;"/>
+            <button class="btn btn-sm btn-success" onclick="doApprove('hr')">✓ HR Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="doReject('hr')">✕ Reject</button>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Safety Approval -->
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:600;color:var(--red);letter-spacing:.5px;">PART B — SAFETY APPROVAL</div>
+            <span class="badge {% if company.safety_status=='Approved' %}b-approved{% elif company.safety_status=='Rejected' %}b-rejected{% else %}b-pending{% endif %}">{{ company.safety_status or 'Pending' }}</span>
+          </div>
+          {% if company.safety_approved_by %}
+          <div style="font-size:12px;color:var(--muted);">By: <strong style="color:var(--text);">{{ company.safety_approved_by }}</strong> &nbsp;·&nbsp; {{ company.safety_approved_at[:16] if company.safety_approved_at else '' }}</div>
+          {% if company.safety_remarks %}<div style="font-size:12px;color:var(--muted);margin-top:3px;">Remarks: {{ company.safety_remarks }}</div>{% endif %}
+          {% else %}
+          <div style="font-size:12px;color:var(--muted);">Awaiting Safety approval</div>
+          {% endif %}
+          {% if company.safety_status == 'Pending' %}
+          <div style="display:flex;gap:6px;margin-top:10px;">
+            <input type="text" id="safety-remark" placeholder="Add remark (optional)" style="font-size:12px;padding:6px 10px;max-width:200px;"/>
+            <button class="btn btn-sm btn-success" onclick="doApprove('safety')">✓ Safety Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="doReject('safety')">✕ Reject</button>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Cluster Approval -->
+        <div style="padding:14px 18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.5px;">CLUSTER / PLANT HEAD APPROVAL</div>
+            <span class="badge {% if company.cluster_approved_by %}b-approved{% else %}b-pending{% endif %}">
+              {% if company.cluster_approved_by %}Approved{% else %}Pending{% endif %}
+            </span>
+          </div>
+          {% if company.cluster_approved_by %}
+          <div style="font-size:12px;color:var(--muted);">By: <strong style="color:var(--text);">{{ company.cluster_approved_by }}</strong> &nbsp;·&nbsp; {{ company.cluster_approved_at[:16] if company.cluster_approved_at else '' }}</div>
+          {% if company.cluster_remarks %}<div style="font-size:12px;color:var(--muted);margin-top:3px;">Remarks: {{ company.cluster_remarks }}</div>{% endif %}
+          {% else %}
+          <div style="font-size:12px;color:var(--muted);">Awaiting Plant Head approval</div>
+          {% if company.hr_status=='Approved' and company.safety_status=='Approved' %}
+          <div style="display:flex;gap:6px;margin-top:10px;">
+            <input type="text" id="cluster-remark" placeholder="Remarks" style="font-size:12px;padding:6px 10px;max-width:200px;"/>
+            <button class="btn btn-sm btn-success" onclick="doApprove('cluster')">✓ Final Approve</button>
+          </div>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PART A CHECKLIST -->
+<div class="card">
+  <div class="card-head">
+    <h3>Part A — HR Checklist</h3>
+    <span class="badge b-approved" style="font-size:11px;">5 Questions</span>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <table>
+      <thead><tr><th style="width:40px;">#</th><th>Question</th><th style="width:80px;">Status</th><th style="width:160px;">Remarks</th></tr></thead>
+      <tbody>
+        {% set parta_questions = [
+          "Does the contractor have adequate Licenses & Permits to perform the task?",
+          "Does the contractor have Insurance cover / ESI / Workmen compensation?",
+          "Does the contractor have Labour License?",
+          "Does the contractor have PF Registration?",
+          "Does the Contractor have Age Proof?"
+        ] %}
+        {% for i in range(1, 6) %}
+        {% set key = 'parta_' ~ i %}
+        {% set ans = parta.get(key, {}) %}
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">{{ i }}</td>
+          <td style="font-size:13.5px;">{{ parta_questions[i-1] }}</td>
+          <td>
+            {% set status = ans.get('status', '') if ans else '' %}
+            {% if status == 'YES' %}<span class="badge b-approved">YES</span>
+            {% elif status == 'NO' %}<span class="badge b-rejected">NO</span>
+            {% elif status == 'NA' %}<span class="badge" style="background:rgba(100,100,100,.15);color:var(--muted);">NA</span>
+            {% else %}<span style="color:var(--muted);font-size:12px;">—</span>{% endif %}
+          </td>
+          <td style="font-size:12px;color:var(--muted);">{{ ans.get('remark', '') if ans else '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PART B CHECKLIST -->
+<div class="card">
+  <div class="card-head">
+    <h3>Part B — Safety Checklist</h3>
+    <span class="badge b-rejected" style="font-size:11px;background:rgba(200,16,46,.12);color:var(--red);">20 Questions</span>
+  </div>
+  <div class="card-body" style="padding:0;">
+    <table>
+      <thead><tr><th style="width:40px;">#</th><th>Question</th><th style="width:80px;">Status</th><th style="width:160px;">Remarks</th></tr></thead>
+      <tbody>
+        {% set partb_questions = [
+          "An up-to-date comprehensive Safety policy or ready to adopt Company policy?",
+          "Does Vendor / Contractor Ready to Deploy Dedicated Safety Supervisor for Ultra High Risk work?",
+          "Relevant legal records available?",
+          "License & qualification of Any specialized job – Electrical License for HT, Certificate for IBR welder, etc.",
+          "Does Contractor agree to follow all KORE Requirement, Progressive consequence management Guideline & Safety guideline?",
+          "Has the Company nominated person met with the contractor's representative to discuss the work and assess risks?",
+          "Has the contractor demonstrated sufficient knowledge of the EOSH legal requirements?",
+          "Does the contractor have ability to understand and adhere to site specific EOSH requirement?",
+          "Contractor demonstrated systems, procedures and documentation to ensure all equipment is in good condition?",
+          "Contractor agrees to bring good potable tools and equipment assessed before allowed entry to the site?",
+          "All contractors supervisors working on sites must have formal approval from site management?",
+          "Every supervisor of the contractor has a minimum of 3 years relevant experience?",
+          "The supervisor for electrical works is a holder of valid supervisory license as per Indian Electricity Rules?",
+          "Adequate resources with trained manpower? Workmen for High risk must have minimum 3 years experience.",
+          "Good Demonstration of past EOSH record of the contractor?",
+          "Does contractor / Vendor have minimum 3 years of relevant experience?",
+          "Does vendor / contractor obtained CA certificate? (0.5-1 Cr. Annual Turnover)",
+          "Does vendor having OSHAS certification or capability to prepare rescue plan & Method statement & Risk Assessment?",
+          "Does the contractor have a dedicated safety officer or safety representative on site?",
+          "Has the contractor been briefed on site emergency procedures and evacuation plan?"
+        ] %}
+        {% for i in range(1, 21) %}
+        {% set key = 'partb_' ~ i %}
+        {% set ans = partb.get(key, {}) %}
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">{{ i }}</td>
+          <td style="font-size:13px;">{{ partb_questions[i-1] }}</td>
+          <td>
+            {% set status = ans.get('status', '') if ans else '' %}
+            {% if status == 'YES' %}<span class="badge b-approved">YES</span>
+            {% elif status == 'NO' %}<span class="badge b-rejected">NO</span>
+            {% elif status == 'NA' %}<span class="badge" style="background:rgba(100,100,100,.15);color:var(--muted);">NA</span>
+            {% else %}<span style="color:var(--muted);font-size:12px;">—</span>{% endif %}
+          </td>
+          <td style="font-size:12px;color:var(--muted);">{{ ans.get('remark', '') if ans else '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DOCUMENTS -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+  <div class="card" style="margin:0;">
+    <div class="card-head"><h3>Part A Documents</h3></div>
+    <div class="card-body" style="padding:0;">
+      {% if docs_a %}
+      <table>
+        <thead><tr><th>#</th><th>Document</th><th>View</th></tr></thead>
+        <tbody>
+          {% for doc in docs_a %}
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">{{ loop.index }}</td>
+            <td style="font-size:13px;">{{ doc.doc_name }}</td>
+            <td><a href="/uploads/{{ doc.file_path }}" target="_blank" class="btn btn-sm btn-secondary">📄 Open</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">No Part A documents uploaded</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card" style="margin:0;">
+    <div class="card-head"><h3>Part B Documents</h3></div>
+    <div class="card-body" style="padding:0;">
+      {% if docs_b %}
+      <table>
+        <thead><tr><th>#</th><th>Document</th><th>View</th></tr></thead>
+        <tbody>
+          {% for doc in docs_b %}
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">{{ loop.index }}</td>
+            <td style="font-size:13px;">{{ doc.doc_name }}</td>
+            <td><a href="/uploads/{{ doc.file_path }}" target="_blank" class="btn btn-sm btn-secondary">📄 Open</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">No Part B documents uploaded</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- SUPERVISORS UNDER THIS COMPANY -->
+{% if supervisors %}
+<div class="card">
+  <div class="card-head"><h3>Supervisors Under This Company</h3></div>
+  <div class="card-body" style="padding:0;">
+    <table>
+      <thead><tr><th>Name</th><th>Work Type</th><th>Workers Under</th><th>Experience</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for sup in supervisors %}
+        <tr>
+          <td><strong>{{ sup.first_name }} {{ sup.last_name }}</strong></td>
+          <td style="font-size:12px;">{{ sup.work_type }}</td>
+          <td style="text-align:center;">{{ sup.num_workers }}</td>
+          <td style="font-size:12px;">{{ sup.experience_years }}y {{ sup.experience_months }}m</td>
+          <td><span class="badge {% if sup.status=='Approved' %}b-approved{% elif sup.status=='Rejected' %}b-rejected{% else %}b-pending{% endif %}">{{ sup.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<style>
+@media print {
+  .topbar, .sidebar, .btn, .form-actions, input[type=text] { display: none !important; }
+  .main { padding: 0 !important; }
+  .card { border: 1px solid #ddd !important; }
+  body { background: white !important; color: black !important; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const coId = {{ company.id }};
+
+function doApprove(part) {
+  const remarkEl = document.getElementById(part + '-remark');
+  const remarks = remarkEl ? remarkEl.value || 'Approved' : 'Approved';
+  fetch(`/companies/${coId}/approve`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({part, remarks})
+  }).then(r => r.json()).then(d => {
+    if(d.success) location.reload();
+  });
+}
+
+function doReject(part) {
+  const remarkEl = document.getElementById(part + '-remark');
+  const remarks = remarkEl ? remarkEl.value || 'Rejected' : 'Rejected';
+  if(!confirm('Are you sure you want to reject this?')) return;
+  fetch(`/companies/${coId}/reject`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({part, remarks})
+  }).then(r => r.json()).then(d => {
+    if(d.success) location.reload();
+  });
+}
+</script>
+{% endblock %}

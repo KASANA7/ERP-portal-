@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+{% block title %}{% if draft %}Continue Draft{% else %}Add Company{% endif %}{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> / <a href="/companies">Companies</a> <span>/ {% if draft %}Continue Draft{% else %}Add{% endif %}</span></div>
+  <h1>{% if draft %}Continue: {{ draft.name }}{% else %}Register New Company{% endif %}</h1>
+  <p>All required fields must be completed before proceeding to the next step. Use Save Draft to save progress.</p>
+</div>
+
+<div id="draft-saved-msg" style="display:none;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.25);color:var(--green);padding:10px 16px;border-radius:6px;margin-bottom:16px;font-size:13.5px;">
+  ✅ Draft saved successfully
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="steps">
+      <div class="step active" id="s1"><div class="step-n">1</div>Company Info</div>
+      <div class="step" id="s2"><div class="step-n">2</div>Work & Risk</div>
+      <div class="step" id="s3"><div class="step-n">3</div>Part A — HR</div>
+      <div class="step" id="s4"><div class="step-n">4</div>Part B — Safety</div>
+      <div class="step" id="s5"><div class="step-n">5</div>Documents</div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="co-form">
+    <input type="hidden" name="step_completed" id="step_completed" value="0"/>
+    <input type="hidden" id="draft-id" value="{{ draft.id if draft else '' }}"/>
+
+      <!-- STEP 1 -->
+      <div id="step-1">
+        <div class="fg c2">
+          <div class="fgroup"><label>Company Name <span class="req">*</span></label><input type="text" name="name" id="f-name" placeholder="Full registered name" value="{{ draft.name if draft else '' }}"/><span class="err" id="e-name"></span></div>
+          <div class="fgroup"><label>GST Number</label><input type="text" name="gst" placeholder="GST No." value="{{ draft.gst if draft else '' }}"/></div>
+          <div class="fgroup"><label>Contact Person <span class="req">*</span></label><input type="text" name="contact_person" id="f-contact_person" placeholder="Owner / Manager" value="{{ draft.contact_person if draft else '' }}"/><span class="err" id="e-contact_person"></span></div>
+          <div class="fgroup"><label>Contact Number <span class="req">*</span></label><input type="tel" name="contact_number" id="f-contact_number" placeholder="10-digit mobile" value="{{ draft.contact_number if draft else '' }}"/><span class="err" id="e-contact_number"></span></div>
+          <div class="fgroup"><label>Email</label><input type="email" name="email" placeholder="company@email.com" value="{{ draft.email if draft else '' }}"/></div>
+          <div class="fgroup"><label>Vendor Code</label><input type="text" name="vendor_code" placeholder="Vendor Code" value="{{ draft.vendor_code if draft else '' }}"/></div>
+          <div class="fgroup s2"><label>Registered Address <span class="req">*</span></label><textarea name="address" id="f-address" placeholder="Full address...">{{ draft.address if draft else '' }}</textarea><span class="err" id="e-address"></span></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="saveDraft(1)">💾 Save Draft</button>
+          <button type="button" class="btn btn-primary" onclick="validate(1)">Next →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="step-2" style="display:none;">
+        <div class="fg c2">
+          <div class="fgroup">
+            <label>Primary Work Type <span class="req">*</span></label>
+            <select name="work_type" id="f-work_type" style="display:none;">
+              <option value="">Select Work Type</option>
+              <option>Canteen</option><option>Chartered Engineer</option>
+              <option>Civil & Construction</option><option>Cleaning</option>
+              <option>CMC</option><option>Competent Person</option><option>DMC</option>
+              <option>Electrical</option><option>Fire AMC</option><option>Forklift Operation</option>
+              <option>IT Services</option><option>Loading / Unloading</option>
+              <option>Mechanical & Fabrication</option><option>Medical Services</option>
+              <option>Man Power Supplier</option><option>OEM</option><option>Office Work</option>
+              <option>Other MHE Handling</option><option>Painting</option><option>Pest Control</option>
+              <option>Scrap Handling</option><option>Security</option><option>Transporter</option>
+              <option>Utility Services</option><option>Others</option>
+            </select>
+            <input type="hidden" name="work_type" id="work_type_val"/>
+            <span class="err" id="e-work_type"></span>
+            <div id="work-tags-selected" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:10px;"></div>
+            <div style="position:relative;">
+              <input type="text" id="work-tag-search" placeholder="Search and select work types..." oninput="filterWorkTags(this.value)" onclick="showWorkDropdown()" autocomplete="off"/>
+              <div id="work-tag-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s2);border:1px solid var(--red);border-radius:0 0 6px 6px;max-height:200px;overflow-y:auto;z-index:100;">
+              </div>
+            </div>
+          </div>
+          <div class="fgroup"><label>No. of Supervisors <span class="req">*</span></label><input type="number" name="num_supervisors" id="f-num_supervisors" placeholder="e.g. 3" min="1"/><span class="err" id="e-num_supervisors"></span></div>
+          <div class="fgroup"><label>Avg. No. of Workers <span class="req">*</span></label><input type="number" name="num_workers" id="f-num_workers" placeholder="e.g. 25" min="1" oninput="checkLabour()"/><span class="err" id="e-num_workers"></span></div>
+          <div class="fgroup"><label>Contract Start Date <span class="req">*</span></label><input type="date" name="contract_start" id="f-contract_start"/><span class="err" id="e-contract_start"></span></div>
+          <div class="fgroup s2">
+            <label>Nature of Work <span class="req">*</span></label>
+            <input type="hidden" name="nature_of_work" id="f-nature_of_work"/>
+            <input type="hidden" name="risk_level" id="risk_level"/>
+            <span class="err" id="e-nature_of_work"></span>
+            <div style="display:flex;gap:10px;margin-top:6px;">
+              <div class="nature-opt" data-val="General Work" data-risk="general" onclick="selNature(this)"><div style="font-size:22px;">🟢</div><div style="font-weight:600;font-size:13px;margin-top:4px;">General Work</div><div style="font-size:11px;color:var(--muted);">Low risk activities</div></div>
+              <div class="nature-opt" data-val="High Risk Work" data-risk="high" onclick="selNature(this)"><div style="font-size:22px;">🟠</div><div style="font-weight:600;font-size:13px;margin-top:4px;">High Risk Work</div><div style="font-size:11px;color:var(--muted);">Requires permit</div></div>
+              <div class="nature-opt" data-val="Ultra High Risk Work" data-risk="critical" onclick="selNature(this)"><div style="font-size:22px;">🔴</div><div style="font-weight:600;font-size:13px;margin-top:4px;">Ultra High Risk</div><div style="font-size:11px;color:var(--muted);">Dedicated supervisor required</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="goStep(1)">← Back</button><button type="button" class="btn btn-secondary" onclick="saveDraft(2)">💾 Save Draft</button><button type="button" class="btn btn-primary" onclick="validate(2)">Next →</button></div>
+      </div>
+
+      <!-- STEP 3: Part A HR Checklist -->
+      <div id="step-3" style="display:none;">
+        <div style="background:rgba(41,121,255,.08);border:1px solid rgba(41,121,255,.2);border-radius:6px;padding:12px 16px;margin-bottom:18px;">
+          <div style="font-size:12px;font-weight:700;color:#2979ff;letter-spacing:1px;text-transform:uppercase;">Part A — HR Checklist</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px;">Answer all 5 questions before proceeding</div>
+        </div>
+        {% for i, q in [(1,"Does the contractor have adequate Licenses & Permits to perform the task?"),(2,"Does the contractor have Insurance cover / ESI / Workmen compensation?"),(3,"Does the contractor have Labour License?"),(4,"Does the contractor have PF Registration?"),(5,"Does the Contractor have Age Proof?")] %}
+        <div class="chk-item" id="ci-parta_{{ i }}">
+          <div class="chk-num">{{ i }}</div>
+          <div class="chk-q">{{ q }}{% if i == 3 %}<div id="labour-note" style="display:none;font-size:11px;color:var(--orange);margin-top:3px;">⚠ Required when workers ≥ 50</div>{% endif %}</div>
+          <div class="chk-opts">
+            <input type="hidden" name="parta_{{ i }}" id="parta_{{ i }}-val" value=""/>
+            <button type="button" class="chk-btn" onclick="sc(this,'yes','parta_{{ i }}-val','ci-parta_{{ i }}')">YES</button>
+            <button type="button" class="chk-btn" onclick="sc(this,'no','parta_{{ i }}-val','ci-parta_{{ i }}')">NO</button>
+            <button type="button" class="chk-btn" onclick="sc(this,'na','parta_{{ i }}-val','ci-parta_{{ i }}')">NA</button>
+            <input type="text" name="parta_{{ i }}_remark" class="chk-remark" placeholder="Remark"/>
+          </div>
+        </div>
+        {% endfor %}
+        <div id="err-parta" style="display:none;color:var(--red);font-size:13px;margin-top:12px;padding:10px;background:rgba(200,16,46,.08);border-radius:5px;">⚠ Please answer all 5 questions before proceeding</div>
+        <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="goStep(2)">← Back</button><button type="button" class="btn btn-secondary" onclick="saveDraft(3)">💾 Save Draft</button><button type="button" class="btn btn-primary" onclick="validate(3)">Next →</button></div>
+      </div>
+
+      <!-- STEP 4: Part B Safety Checklist -->
+      <div id="step-4" style="display:none;">
+        <div style="background:rgba(200,16,46,.08);border:1px solid rgba(200,16,46,.2);border-radius:6px;padding:12px 16px;margin-bottom:18px;">
+          <div style="font-size:12px;font-weight:700;color:var(--red);letter-spacing:1px;text-transform:uppercase;">Part B — Safety Checklist</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:3px;">Answer all 20 questions before proceeding</div>
+        </div>
+        {% for i, q in [
+          (1,"An up-to-date comprehensive Safety policy or ready to adopt Company policy?"),
+          (2,"Does Vendor / Contractor Ready to Deploy Dedicated Safety Supervisor for Ultra High Risk work? (Mandatory for 10 or more than 10)."),
+          (3,"Relevant legal records available?"),
+          (4,"License & qualification of Any specialized job – Electrical License for HT, Certificate for IBR welder, etc."),
+          (5,"Does Contractor agree to follow all KORE Requirement, Progressive consequence management Guideline & Safety guideline?"),
+          (6,"Has the Company nominated person met with the contractor's representative to discuss the work and assess risks?"),
+          (7,"Has the contractor demonstrated sufficient knowledge of the EOSH legal requirements which apply to the work?"),
+          (8,"Does the contractor have ability to understand and adhere to site specific EOSH requirement?"),
+          (9,"Contractor demonstrated that they have systems, procedures and documentation to make sure all equipment is in good condition?"),
+          (10,"Contractor agrees to bring good potable tools and equipment assessed before allowed entry to the site?"),
+          (11,"All contractors supervisors working on sites must have formal approval from site management?"),
+          (12,"Every supervisor of the contractor has a minimum of 3 years relevant experience?"),
+          (13,"The supervisor for electrical works is a holder of valid supervisory license as per Indian Electricity Rules?"),
+          (14,"Adequate resources with trained manpower available? Workmen for High risk must have minimum 3 years experience."),
+          (15,"Good Demonstration of past EOSH record of the contractor? (Refer Contractor KPI Top & Bottom based on past safety performance)"),
+          (16,"Does contractor / Vendor have minimum 3 years of relevant experience? (Experience Letter / Relevant documents to be produced)"),
+          (17,"Does vendor / contractor obtained CA certificate? (0.5-1 Cr. Annual Turnover)"),
+          (18,"Does vendor having OSHAS certification or capability to prepare rescue plan & Method statement & Risk Assessment?"),
+          (19,"Does the contractor have a dedicated safety officer or safety representative on site?"),
+          (20,"Has the contractor been briefed on site emergency procedures and evacuation plan?")
+        ] %}
+        <div class="chk-item" id="ci-partb_{{ i }}">
+          <div class="chk-num">{{ i }}</div>
+          <div class="chk-q">{{ q }}</div>
+          <div class="chk-opts">
+            <input type="hidden" name="partb_{{ i }}" id="partb_{{ i }}-val" value=""/>
+            <button type="button" class="chk-btn" onclick="sc(this,'yes','partb_{{ i }}-val','ci-partb_{{ i }}')">YES</button>
+            <button type="button" class="chk-btn" onclick="sc(this,'no','partb_{{ i }}-val','ci-partb_{{ i }}')">NO</button>
+            <button type="button" class="chk-btn" onclick="sc(this,'na','partb_{{ i }}-val','ci-partb_{{ i }}')">NA</button>
+            <input type="text" name="partb_{{ i }}_remark" class="chk-remark" placeholder="Remark"/>
+          </div>
+        </div>
+        {% endfor %}
+        <div id="err-partb" style="display:none;color:var(--red);font-size:13px;margin-top:12px;padding:10px;background:rgba(200,16,46,.08);border-radius:5px;">⚠ Please answer all 20 questions before proceeding</div>
+        <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="goStep(3)">← Back</button><button type="button" class="btn btn-secondary" onclick="saveDraft(4)">💾 Save Draft</button><button type="button" class="btn btn-primary" onclick="validate(4)">Next →</button></div>
+      </div>
+
+      <!-- STEP 5: Documents -->
+      <div id="step-5" style="display:none;">
+        <div style="background:rgba(41,121,255,.08);border:1px solid rgba(41,121,255,.2);border-radius:6px;padding:12px 16px;margin-bottom:18px;">
+          <div style="font-size:12px;font-weight:700;color:#2979ff;letter-spacing:1px;text-transform:uppercase;">Part A Documents — HR</div>
+        </div>
+        <div class="fg c3">
+          {% for doc_name, icon, opt in [("Company Registration Certificate","📄",False),("GST Certificate","📄",True),("ESIC / PF Registration","📄",False),("Age Proof (Owner)","🪪",False),("Insurance Certificate","📄",False),("Labour License","📄",True)] %}
+          <div class="fgroup">
+            <label>{{ doc_name }} {% if opt %}<span style="color:var(--muted);font-size:10px;">(optional)</span>{% else %}<span class="req">*</span>{% endif %}</label>
+            <div class="upload-zone"><input type="file" name="parta_doc_file[]" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/><input type="hidden" name="parta_doc_name[]" value="{{ doc_name }}"/><div class="upload-icon">{{ icon }}</div><p>Browse & Upload</p><div class="fname"></div></div>
+          </div>
+          {% endfor %}
+        </div>
+        <div id="extra-parta"></div>
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addPartDoc('extra-parta','parta')">+ Add More Part A Documents</button>
+
+        <div style="background:rgba(200,16,46,.08);border:1px solid rgba(200,16,46,.2);border-radius:6px;padding:12px 16px;margin:24px 0 18px;">
+          <div style="font-size:12px;font-weight:700;color:var(--red);letter-spacing:1px;text-transform:uppercase;">Part B Documents — Safety</div>
+        </div>
+        <div class="fg c3">
+          {% for doc_name, icon, opt in [("Safety Policy Document","📋",False),("OSHAS / Safety Certification","📄",True),("Rescue Plan / Method Statement","📄",True)] %}
+          <div class="fgroup">
+            <label>{{ doc_name }} {% if opt %}<span style="color:var(--muted);font-size:10px;">(optional)</span>{% else %}<span class="req">*</span>{% endif %}</label>
+            <div class="upload-zone"><input type="file" name="partb_doc_file[]" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/><input type="hidden" name="partb_doc_name[]" value="{{ doc_name }}"/><div class="upload-icon">{{ icon }}</div><p>Browse & Upload</p><div class="fname"></div></div>
+          </div>
+          {% endfor %}
+        </div>
+        <div id="extra-partb"></div>
+        <button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addPartDoc('extra-partb','partb')">+ Add More Part B Documents</button>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="goStep(4)">← Back</button>
+          <button type="button" class="btn btn-primary" onclick="submitForm()">Submit for Approval →</button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<style>
+.err{font-size:12px;color:var(--red);margin-top:3px;display:block;min-height:14px;}
+input.invalid,select.invalid,textarea.invalid{border-color:var(--red)!important;}
+.nature-opt{flex:1;border:2px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;background:var(--s2);}
+.nature-opt:hover{border-color:var(--muted);}
+.nature-opt.selected{border-color:var(--red);background:rgba(200,16,46,.08);}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function goStep(n){
+  for(let i=1;i<=5;i++){
+    document.getElementById('step-'+i).style.display=i===n?'block':'none';
+    const s=document.getElementById('s'+i);
+    s.classList.remove('active','done');
+    if(i<n)s.classList.add('done');
+    if(i===n)s.classList.add('active');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function validate(step){
+  let ok=true;
+  if(step===1){
+    ['name','contact_person','contact_number','address'].forEach(f=>{
+      const el=document.getElementById('f-'+f);
+      const er=document.getElementById('e-'+f);
+      if(!el.value.trim()){el.classList.add('invalid');er.textContent='Required';ok=false;}
+      else{el.classList.remove('invalid');er.textContent='';}
+    });
+    if(ok)goStep(2);
+  }
+  else if(step===2){
+    ['work_type','num_supervisors','num_workers','contract_start'].forEach(f=>{
+      const el=document.getElementById('f-'+f);
+      const er=document.getElementById('e-'+f);
+      if(!el.value.trim()){el.classList.add('invalid');er.textContent='Required';ok=false;}
+      else{el.classList.remove('invalid');er.textContent='';}
+    });
+    if(!document.getElementById('f-nature_of_work').value){
+      document.getElementById('e-nature_of_work').textContent='Select nature of work';
+      ok=false;
+    } else {
+      document.getElementById('e-nature_of_work').textContent='';
+    }
+    if(ok)goStep(3);
+  }
+  else if(step===3){
+    let unans=false;
+    for(let i=1;i<=5;i++){
+      const v=document.getElementById('parta_'+i+'-val').value;
+      const row=document.getElementById('ci-parta_'+i);
+      if(!v){unans=true;row.style.background='rgba(200,16,46,.06)';}
+      else row.style.background='';
+    }
+    document.getElementById('err-parta').style.display=unans?'block':'none';
+    if(!unans)goStep(4);
+  }
+  else if(step===4){
+    let unans=false;
+    for(let i=1;i<=20;i++){
+      const v=document.getElementById('partb_'+i+'-val').value;
+      const row=document.getElementById('ci-partb_'+i);
+      if(!v){unans=true;row.style.background='rgba(200,16,46,.06)';}
+      else row.style.background='';
+    }
+    document.getElementById('err-partb').style.display=unans?'block':'none';
+    if(!unans)goStep(5);
+  }
+}
+
+function sc(btn,type,fieldId,rowId){
+  btn.closest('.chk-opts').querySelectorAll('.chk-btn').forEach(b=>b.className='chk-btn');
+  btn.classList.add('chk-btn','sel-'+type);
+  document.getElementById(fieldId).value=type.toUpperCase();
+  document.getElementById(rowId).style.background='';
+}
+
+function selNature(el){
+  document.querySelectorAll('.nature-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('f-nature_of_work').value=el.dataset.val;
+  document.getElementById('risk_level').value=el.dataset.risk;
+  document.getElementById('e-nature_of_work').textContent='';
+}
+
+function checkLabour(){
+  const w=parseInt(document.getElementById('f-num_workers').value)||0;
+  const n=document.getElementById('labour-note');
+  if(n)n.style.display=w>=50?'block':'none';
+}
+
+function addPartDoc(containerId,part){
+  const c=document.getElementById(containerId);
+  const div=document.createElement('div');
+  div.className='extra-doc-row';
+  div.style.marginTop='8px';
+  div.innerHTML=`<input type="text" name="${part}_doc_name[]" placeholder="Document name" style="flex:1;"/><div class="upload-zone" style="width:180px;padding:8px;position:relative;"><input type="file" name="${part}_doc_file[]" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="fname(this)" accept=".pdf,.jpg,.jpeg,.png"/><div style="font-size:18px;">📎</div><p style="font-size:11px;">Browse file</p><div class="fname" style="font-size:10px;color:var(--green);margin-top:3px;"></div></div><button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>`;
+  c.appendChild(div);
+}
+
+function saveDraft(step) {
+  const data = {};
+  // Capture all named inputs except files and step_completed
+  document.querySelectorAll('#co-form input, #co-form select, #co-form textarea').forEach(el => {
+    if(!el.name || el.type === 'file' || el.name === 'step_completed') return;
+    if(el.type === 'checkbox') { data[el.name] = el.checked; return; }
+    if(el.value !== undefined) data[el.name] = el.value;
+  });
+
+  // Also capture checklist answers explicitly
+  for(let i=1;i<=5;i++){
+    const el = document.getElementById('parta_'+i+'-val');
+    if(el) data['parta_'+i] = el.value;
+  }
+  for(let i=1;i<=20;i++){
+    const el = document.getElementById('partb_'+i+'-val');
+    if(el) data['partb_'+i] = el.value;
+  }
+
+  const draftId = document.getElementById('draft-id').value || null;
+  fetch('/companies/save-draft', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      company_id: draftId ? parseInt(draftId) : null,
+      step: step,
+      form_data: data
+    })
+  }).then(r => r.json()).then(d => {
+    if(d.success) {
+      document.getElementById('draft-id').value = d.company_id;
+      const msg = document.getElementById('draft-saved-msg');
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 3000);
+    }
+  });
+}
+
+// Pre-fill draft data if continuing
+{% if draft and draft_step %}
+window.addEventListener('DOMContentLoaded', () => {
+  goStep({{ draft_step }});
+  {% if draft.nature_of_work %}
+  document.querySelectorAll('.nature-opt').forEach(o => {
+    if(o.dataset.val === '{{ draft.nature_of_work }}') {
+      o.classList.add('selected');
+      document.getElementById('f-nature_of_work').value = o.dataset.val;
+      document.getElementById('risk_level').value = o.dataset.risk;
+    }
+  });
+  {% endif %}
+});
+{% endif %}
+
+// ── TAG WORK TYPE SELECTOR ────────────────────────────
+const allWorkTypes = [
+  'Canteen','Chartered Engineer','Civil & Construction','Cleaning','CMC',
+  'Competent Person','DMC','Electrical','Fire AMC','Forklift Operation',
+  'IT Services','Loading / Unloading','Mechanical & Fabrication','Medical Services',
+  'Man Power Supplier','OEM','Office Work','Other MHE Handling','Painting',
+  'Pest Control','Scrap Handling','Security','Transporter','Utility Services','Others'
+];
+let selectedWorkTypes = [];
+
+function renderWorkTags() {
+  const container = document.getElementById('work-tags-selected');
+  container.innerHTML = selectedWorkTypes.map(t => `
+    <span style="background:rgba(200,16,46,.15);border:1px solid rgba(200,16,46,.3);color:var(--text);padding:4px 10px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:6px;">
+      ${t} <span onclick="removeWorkTag('${t}')" style="cursor:pointer;color:var(--red);font-weight:bold;">×</span>
+    </span>`).join('');
+  document.getElementById('work_type_val').value = selectedWorkTypes.join(', ');
+}
+
+function removeWorkTag(t) {
+  selectedWorkTypes = selectedWorkTypes.filter(x => x !== t);
+  renderWorkTags();
+  renderWorkDropdown(document.getElementById('work-tag-search').value);
+}
+
+function addWorkTag(t) {
+  if(!selectedWorkTypes.includes(t)) {
+    selectedWorkTypes.push(t);
+    renderWorkTags();
+  }
+  document.getElementById('work-tag-search').value = '';
+  renderWorkDropdown('');
+}
+
+function renderWorkDropdown(filter) {
+  const dd = document.getElementById('work-tag-dropdown');
+  const filtered = allWorkTypes.filter(t =>
+    t.toLowerCase().includes(filter.toLowerCase()) && !selectedWorkTypes.includes(t)
+  );
+  if(!filtered.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = filtered.map(t => `
+    <div onclick="addWorkTag('${t}')" style="padding:8px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='rgba(200,16,46,.1)'" onmouseout="this.style.background=''">
+      ${t}
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+
+function showWorkDropdown() {
+  renderWorkDropdown(document.getElementById('work-tag-search').value);
+}
+
+function filterWorkTags(val) {
+  renderWorkDropdown(val);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if(!e.target.closest('#work-tag-search') && !e.target.closest('#work-tag-dropdown')) {
+    document.getElementById('work-tag-dropdown').style.display = 'none';
+  }
+});
+
+// Override validate step 2 to check work type tags
+const origValidate = validate;
+validate = function(step) {
+  if(step === 2 && selectedWorkTypes.length === 0) {
+    document.getElementById('e-work_type').textContent = 'Select at least one work type';
+    return;
+  }
+  if(step === 2) document.getElementById('e-work_type').textContent = '';
+  origValidate(step);
+};
+
+// TAG SELECTOR ────────────────────────────────────────
+document.getElementById('co-form').addEventListener('keydown', function(e){
+  if(e.key==='Enter' && e.target.tagName!=='TEXTAREA'){
+    e.preventDefault();
+    return false;
+  }
+});
+
+// Final submit — only allow if on step 5
+function checkFinalSubmit(){
+  const step5=document.getElementById('step-5');
+  if(step5.style.display!=='block'){
+    alert('Please complete all steps before submitting.');
+    return false;
+  }
+  return true;
+}
+
+function submitForm(){
+  document.getElementById('step_completed').value='5';
+  document.getElementById('co-form').submit();
+}
+</script>
+{% endblock %}

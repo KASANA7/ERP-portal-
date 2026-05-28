@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Supervisors{% endblock %}
+{% block content %}
+<div class="ph">
+  <div class="bc"><a href="/">Home</a> <span>/ Supervisors</span></div>
+  <h1>Supervisors</h1>
+  <p>Registered supervisors under approved contractor companies</p>
+</div>
+
+<!-- Search + Add -->
+<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+  <input type="text" id="sup-search" placeholder="🔍 Search by name, company..." oninput="filterSups()" style="max-width:300px;"/>
+  <a href="/supervisors/add" class="btn btn-primary" style="margin-left:auto;">+ Add Supervisor</a>
+</div>
+
+<!-- Company Tabs -->
+<div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;">
+  <div class="sup-tab active" data-company="all" onclick="switchTab(this)">All</div>
+  {% for co in companies %}
+  <div class="sup-tab" data-company="{{ co.id }}" onclick="switchTab(this)">{{ co.name }}</div>
+  {% endfor %}
+</div>
+
+<!-- Risk Filter -->
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+  <span style="font-size:12px;color:var(--muted);align-self:center;">Risk:</span>
+  <button class="risk-filter-btn active" data-risk="all" onclick="filterRisk(this)">All</button>
+  <button class="risk-filter-btn" data-risk="general" onclick="filterRisk(this)">🟢 General</button>
+  <button class="risk-filter-btn" data-risk="high" onclick="filterRisk(this)">🟠 High Risk</button>
+  <button class="risk-filter-btn" data-risk="critical" onclick="filterRisk(this)">🔴 Ultra High Risk</button>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h3>Supervisors (<span id="sup-count">{{ supervisors|length }}</span>)</h3>
+  </div>
+  <div class="tbl-wrap">
+    <table id="sup-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Company</th>
+          <th>Work Type</th>
+          <th>Workers Under</th>
+          <th>Experience</th>
+          <th>Risk</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sup in supervisors %}
+        <tr class="sup-row"
+            data-company="{{ sup.company_id }}"
+            data-risk="{{ sup.risk_level or 'general' }}"
+            data-name="{{ (sup.first_name ~ ' ' ~ (sup.middle_name or '') ~ ' ' ~ sup.last_name)|lower }}"
+            data-coname="{{ sup.company_name|lower }}">
+          <td>
+            <strong>{{ sup.first_name }} {{ sup.middle_name or '' }} {{ sup.last_name }}</strong>
+            <br><span style="font-size:11px;color:var(--muted);">{{ sup.mobile or '' }}</span>
+          </td>
+          <td style="font-size:12px;">{{ sup.company_name }}</td>
+          <td style="font-size:12px;">{{ sup.work_type }}</td>
+          <td style="text-align:center;">{{ sup.num_workers }}</td>
+          <td style="font-size:12px;">{{ sup.experience_years }}y {{ sup.experience_months }}m</td>
+          <td>
+            {% if sup.risk_level == 'general' or sup.nature_of_work == 'General Work' %}
+              <span class="risk-b rb-low">GENERAL</span>
+            {% elif sup.risk_level == 'high' %}
+              <span class="risk-b rb-high">HIGH</span>
+            {% elif sup.risk_level == 'critical' %}
+              <span class="risk-b rb-crit">ULTRA HIGH</span>
+            {% else %}
+              <span class="risk-b rb-low">GENERAL</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {% if sup.status=='Approved' %}b-approved{% elif sup.status=='Rejected' %}b-rejected{% else %}b-pending{% endif %}">
+              {{ sup.status }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;gap:5px;">
+              {% if sup.status == 'Draft' %}
+              <a href="/supervisors/{{ sup.id }}/continue" class="btn btn-sm btn-primary">Continue →</a>
+              {% elif sup.status == 'Pending' %}
+              <button class="btn btn-sm btn-success" onclick="approveSup({{ sup.id }})">✓</button>
+              <button class="btn btn-sm btn-secondary">View</button>
+              {% else %}
+              <button class="btn btn-sm btn-secondary">View</button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">No supervisors yet. <a href="/supervisors/add" style="color:var(--red);">Add one →</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.sup-tab{padding:10px 20px;cursor:pointer;color:var(--muted);font-size:13.5px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s;}
+.sup-tab:hover{color:var(--text);}
+.sup-tab.active{color:var(--text);border-bottom-color:var(--red);}
+.risk-filter-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--s2);color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;}
+.risk-filter-btn.active{background:rgba(200,16,46,.12);border-color:var(--red);color:var(--text);}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let activeCompany = 'all';
+let activeRisk = 'all';
+
+function switchTab(el) {
+  document.querySelectorAll('.sup-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  activeCompany = el.dataset.company;
+  applyFilters();
+}
+
+function filterRisk(el) {
+  document.querySelectorAll('.risk-filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  activeRisk = el.dataset.risk;
+  applyFilters();
+}
+
+function filterSups() {
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('sup-search').value.toLowerCase();
+  const rows = document.querySelectorAll('.sup-row');
+  let visible = 0;
+
+  rows.forEach(row => {
+    const coMatch = activeCompany === 'all' || row.dataset.company === activeCompany;
+    const riskMatch = activeRisk === 'all' || row.dataset.risk === activeRisk;
+    const searchMatch = !search ||
+      row.dataset.name.includes(search) ||
+      row.dataset.coname.includes(search);
+
+    if(coMatch && riskMatch && searchMatch) {
+      row.style.display = '';
+      visible++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  document.getElementById('sup-count').textContent = visible;
+}
+
+function approveSup(id) {
+  fetch(`/supervisors/${id}/approve`, {method:'POST'})
+  .then(r => r.json())
+  .then(d => { if(d.success) location.reload(); });
+}
+</script>
+{% endblock %}
