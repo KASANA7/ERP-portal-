@@ -10,27 +10,32 @@ CONTRACTOR MANAGMENT:
  Store contractor details and records
  Maintain contractor database
  Track contractor activity
+
 WORKER MANAGMENT:
  Register workers under contractors
  Generate worker cards/records
  Manage worker documentation
  Maintain worker history
+
 SAFETY & INDUCTION:
  Worker induction tracking
  Re-induction handling
  Safety approval workflows
  Safety compliance management
+
 DASHBOARD & REPORTS:
  Admin dashboard
  Workforce statistics
  Contractor summaries
  Exportable reports
  Excel export support
+
 AUTHENTICATION SYSTEM:
  Secure login system
  Session-based authentication
  Password hashing
  User role handling
+
 FILE MANAGMENT:
  Upload worker documents
  Secure file handling
@@ -60,7 +65,6 @@ FILE MANAGMENT:
 └── README.md
 
 FUTURE IMPROVMENTS:
-
 Planned modules and upgrades:
  Work Permit System
  BBS (Behavior Based Safety)
