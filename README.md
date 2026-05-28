@@ -6,41 +6,41 @@ In saefty / HR there is a part where they manage the contracotors of the company
 so this application is a CMS (Contractor Managment system ) 
 
 CONTRACTOR MANAGMENT:
- Add and manage contractor companies
- Store contractor details and records
- Maintain contractor database
- Track contractor activity
+ Add and manage contractor companies,
+ Store contractor details and records,
+ Maintain contractor database,
+ Track contractor activity,
 
 WORKER MANAGMENT:
- Register workers under contractors
- Generate worker cards/records
- Manage worker documentation
- Maintain worker history
+ Register workers under contractors,
+ Generate worker cards/records,
+ Manage worker documentation,
+ Maintain worker history,
 
 SAFETY & INDUCTION:
- Worker induction tracking
- Re-induction handling
- Safety approval workflows
- Safety compliance management
-
+ Worker induction tracking,
+ Re-induction handling,
+ Safety approval workflows,
+ Safety compliance management,
+ 
 DASHBOARD & REPORTS:
- Admin dashboard
- Workforce statistics
- Contractor summaries
- Exportable reports
- Excel export support
+ Admin dashboard,
+ Workforce statistics,
+ Contractor summaries,
+ Exportable reports,
+ Excel export support,
 
 AUTHENTICATION SYSTEM:
- Secure login system
- Session-based authentication
- Password hashing
- User role handling
+ Secure login system,
+ Session-based authentication,
+ Password hashing,
+ User role handling,
 
 FILE MANAGMENT:
- Upload worker documents
- Secure file handling
- Extension validation
- Organized file storage
+ Upload worker documents,
+ Secure file handling,
+ Extension validation,
+ Organized file storage,
 
  PROJECT STRUCTURE:
   project/
@@ -66,15 +66,15 @@ FILE MANAGMENT:
 
 FUTURE IMPROVMENTS:
 Planned modules and upgrades:
- Work Permit System
- BBS (Behavior Based Safety)
- Gate Pass Management
- Visitor Management
- PPE Tracking
- Incident Reporting
- QR Verification
- Role-Based Permissions
- PostgreSQL Migration
- Mobile Responsiveness
- Multi-Plant Support
+ Work Permit System,
+ BBS (Behavior Based Safety),
+ Gate Pass Management,
+ Visitor Management,
+ PPE Tracking,
+ Incident Reporting,
+ QR Verification,
+ Role-Based Permissions,
+ PostgreSQL Migration,
+ Mobile Responsiveness,
+ Multi-Plant Support,
 
