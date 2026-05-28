@@ -76,5 +76,8 @@ Planned modules and upgrades:
  Role-Based Permissions,
  PostgreSQL Migration,
  Mobile Responsiveness,
- Multi-Plant Support,
+ Multi-Plant Support, 
+
+ AND : YES THIS IS ALL CLAUDED 
+ 
 
